@@ -26,7 +26,7 @@ class MyApp {
         ...
         this.cache = cache;
 
-        this.cache.setTTL(20); //set default cache TTL for 1 minute
+        this.cache.setTTL(60); //set default cache TTL for 1 minute
         ....
     }
     ...
@@ -68,8 +68,8 @@ Observable operators
 
 ```js
 ...
-   let request = this.http.get(url);
-   return this.cache.loadItem(cacheKey, request).map(res => res.json());
+let request = this.http.get(url);
+return this.cache.loadItem(cacheKey, request).map(res => res.json());
 ...
 ```
 
@@ -80,11 +80,11 @@ For example error handling (on error, retry request every 6 seconds):
 
 ```js
 ...
-   let request = this.http.get(url)
-                        .retryWhen((error) => {
-                            return error.timer(6000);
-                        }).map(res => res.json());
-   return this.cache.loadItem(cacheKey, request);
+let request = this.http.get(url)
+                    .retryWhen((error) => {
+                        return error.timer(6000);
+                    }).map(res => res.json());
+return this.cache.loadItem(cacheKey, request);
 ...
 ```
 
@@ -96,14 +96,14 @@ all cache entries for all pages. So this is time for third parameter groupKey.
 
 ```js
 ...
-    loadList(pageNumber) {
-        let url = "http://google.com/?page=" + pageNumber;
-        let cacheKey = url;
-        let groupKey = "googleListPages"
+loadList(pageNumber) {
+    let url = "http://google.com/?page=" + pageNumber;
+    let cacheKey = url;
+    let groupKey = "googleListPages"
 
-        let request = this.http.get(url).map(res => res.json());
-        return this.cache.loadItem(cacheKey, request, groupKey);
-    }
+    let request = this.http.get(url).map(res => res.json());
+    return this.cache.loadItem(cacheKey, request, groupKey);
+}
 ...
 ```
 
@@ -111,9 +111,9 @@ And on pull to refresh delete all cache entries in group googleListPages:
 
 ```js
 ...
-    pullToRefresh() {
-        this.cache.removeByGroup("googleListPages");
-    }
+pullToRefresh() {
+    this.cache.removeByGroup("googleListPages");
+}
 ...
 ```
 
@@ -123,13 +123,13 @@ If you want custom TTL for single request, it can by easily done by third parame
 
 ```js
 ...
-    loadList(pageNumber) {
-        ...
-        let ttl = 60 * 60 * 24 * 7; // TTL in seconds for one week
+loadList(pageNumber) {
+    ...
+    let ttl = 60 * 60 * 24 * 7; // TTL in seconds for one week
 
-        let request = this.http.get(url).map(res => res.json());
-        return this.cache.loadItem(cacheKey, request, groupKey, ttl);
-    }
+    let request = this.http.get(url).map(res => res.json());
+    return this.cache.loadItem(cacheKey, request, groupKey, ttl);
+}
 ...
 ```
 
@@ -139,20 +139,20 @@ This is not so smart, you must call getItem twice... It will be improved in upco
 
 ```js
 ...
-   let arrayToCache = ["Hello", "World"];
-   let cacheKey = "my-array";
+let arrayToCache = ["Hello", "World"];
+let cacheKey = "my-array";
 
-   return new Promise((resolve, reject) => {
-        this.cache.getItem().then(item => {
-            resolve(item);
-        }).catch(() => {
-            this.cache.saveItem(cacheKey, arrayToCache).then(() => {
-                this.cache.getItem().then(item => {
-                    resolve(item);
-                });
+return new Promise((resolve, reject) => {
+    this.cache.getItem().then(item => {
+        resolve(item);
+    }).catch(() => {
+        this.cache.saveItem(cacheKey, arrayToCache).then(() => {
+            this.cache.getItem().then(item => {
+                resolve(item);
             });
         });
-   });
+    });
+});
 ...
 ```
 
@@ -161,23 +161,20 @@ This is not so smart, you must call getItem twice... It will be improved in upco
 It's automatically done on every startup, but you can do it manually.
 
 ```js
-...
-    this.cache.removeExpired();
-...
+this.cache.removeExpired();
 ```
 
 #### Delete all entries
 
 ```js
-...
-    this.cache.removeAll();
-...
+this.cache.removeAll();
 ```
 
 #### Set default TTL
 
 ```js
-...
-    this.cache.setTTL(60 * 60); //set default cache TTL for 1 hour
-...
+this.cache.setTTL(60 * 60); //set default cache TTL for 1 hour
 ```
+
+
+For more inspiration look into code :)
