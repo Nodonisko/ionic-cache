@@ -8,7 +8,7 @@ better fix it and send pull request :)
 
 ## Install
 
-Simple copy file to your providers folder and inject it in app.js file.
+Simple copy file to your providers folder and inject it in *app.js* file.
 
 ```js
 import {CacheProvider} from "./providers/cache-provider/cache-provider";
@@ -63,7 +63,7 @@ export class CategoryProvider {
 #### Cache whole request response
 
 Sometimes you need to cache whole response, if you need to look to Headers etc. It can be done only with simple 
-move .map(res => res.json()) after loadItem method. LoadItem returns Observable, so you can also use other 
+move *.map(res => res.json())* after *loadItem* method. *LoadItem* returns Observable, so you can also use other 
 Observable operators
 
 ```js
@@ -75,7 +75,7 @@ return this.cache.loadItem(cacheKey, request).map(res => res.json());
 
 #### Cache with custom Observable operators
 
-LoadItem method using Observable and return Observable, so you can use lot of Observable operators. 
+*LoadItem* method using Observable and return Observable, so you can use lot of Observable operators. 
 For example error handling (on error, retry request every 6 seconds):
 
 ```js
@@ -107,7 +107,7 @@ loadList(pageNumber) {
 ...
 ```
 
-And on pull to refresh delete all cache entries in group googleListPages:
+And on pull to refresh delete all cache entries in group *googleListPages*:
 
 ```js
 ...
@@ -135,7 +135,7 @@ loadList(pageNumber) {
 
 #### Cache non-observables (arrays, strings etc.)
 
-This is not so smart, you must call getItem twice... It will be improved in upcoming versions.
+This is not so smart, you must call *getItem* twice... It will be improved in upcoming versions.
 
 ```js
 ...
