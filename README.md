@@ -173,7 +173,7 @@ this.cache.removeAll();
 #### Set default TTL
 
 ```js
-this.cache.setTTL(60 * 60); //set default cache TTL for 1 hour
+this.cache.setDefaultTTL(60 * 60); //set default cache TTL for 1 hour
 ```
 
 #### Disable cache
