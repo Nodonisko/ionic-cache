@@ -55,7 +55,7 @@ export class CacheProvider {
      * @return {Promise<T>} - query execution promise
      */
     saveItem(key, data, groupKey = 'none', ttl = this.ttl) {
-        if(!this.enableCache) return Promise.reject("Cache is not enabled.");
+        if (!this.enableCache) return Promise.reject("Cache is not enabled.");
 
         let expireTime = new Date().getTime() + ttl;
         let type = this.isRequest(data) ? 'request' : typeof data;
@@ -72,7 +72,7 @@ export class CacheProvider {
      * @return {Promise<T>} - query execution promise
      */
     removeItem(key) {
-        if(!this.enableCache) return Promise.reject("Cache is not enabled.");
+        if (!this.enableCache) return Promise.reject("Cache is not enabled.");
 
         let query = "DELETE FROM " + this.tableName + " WHERE key = '" + key + "'";
 
@@ -87,7 +87,7 @@ export class CacheProvider {
     getRawItem(key) {
         let query = "SELECT * FROM " + this.tableName + " WHERE key = '" + key + "'";
         return new Promise((resolve, reject) => {
-            if(!this.enableCache) reject("Cache is not enabled");
+            if (!this.enableCache) reject("Cache is not enabled");
 
             this.storage.query(query).then(data => {
                 let rows = data.res.rows;
@@ -107,7 +107,7 @@ export class CacheProvider {
      */
     getItem(key) {
         return new Promise((resolve, reject) => {
-            if(!this.enableCache) reject("Cache is not enabled");
+            if (!this.enableCache) reject("Cache is not enabled");
 
             this.getRawItem(key).then(data => {
                 if (data.expire < new Date().getTime()) {
@@ -145,16 +145,15 @@ export class CacheProvider {
      * @return {Observable} - data from cache or origin observable
      */
     loadItem(key, observable, groupKey, ttl) {
-        observable = observable.share();
-        let data = observable;
+        if (!this.enableCache) return observable;
 
-        if(this.enableCache) {
-            let data = Observable.fromPromise(this.getItem(key)).catch((e) => {
-                console.log(e, key);
-                observable.subscribe(res => this.saveItem(key, res, groupKey, ttl));
-                return observable;
-            });
-        }
+        observable = observable.share();
+
+        let data = Observable.fromPromise(this.getItem(key)).catch((e) => {
+            console.log(e, key);
+            observable.subscribe(res => this.saveItem(key, res, groupKey, ttl));
+            return observable;
+        });
 
         return data;
     }
@@ -164,7 +163,7 @@ export class CacheProvider {
      * @return {Promise}
      */
     removeAll() {
-        if(!this.enableCache) return Promise.reject("Cache is not enabled.");
+        if (!this.enableCache) return Promise.reject("Cache is not enabled.");
 
         let query = "DELETE FROM " + this.tableName;
 
@@ -176,7 +175,7 @@ export class CacheProvider {
      * @return {Promise<T>} - query promise
      */
     removeExpired() {
-        if(!this.enableCache) return Promise.reject("Cache is not enabled.");
+        if (!this.enableCache) return Promise.reject("Cache is not enabled.");
 
         let datetime = new Date().getTime();
         let query = "DELETE FROM " + this.tableName + " WHERE expire < " + datetime;
@@ -190,7 +189,7 @@ export class CacheProvider {
      * @return {Promise<T>} - query promise
      */
     removeByGroup(groupKey) {
-        if(!this.enableCache) return Promise.reject("Cache is not enabled.");
+        if (!this.enableCache) return Promise.reject("Cache is not enabled.");
 
         let datetime = new Date().getTime();
         let query = "DELETE FROM " + this.tableName + " WHERE group_key = '" + groupKey + "'";
