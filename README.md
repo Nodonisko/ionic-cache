@@ -22,7 +22,7 @@ class MyApp {
         return [[IonicApp], [Platform], [CacheProvider]];
     }
 
-    constructor(app, platform, http, user, network, cache) {
+    constructor(app, platform, cache) {
         ...
         this.cache = cache;
 
@@ -175,6 +175,16 @@ this.cache.removeAll();
 ```js
 this.cache.setTTL(60 * 60); //set default cache TTL for 1 hour
 ```
+
+#### Disable cache
+
+If you are using *loadItem* method you can disable cache without any worrying, it will pass origin Observable through.
+Other method will return Promise reject.
+
+```js
+this.cache.enableCache = false; //Disable cache
+```
+
 
 
 For more inspiration look into code :)
