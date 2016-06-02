@@ -140,7 +140,7 @@ You can cache numbers, strings, arrays, objects etc.
 ```js
 ...
 let arrayToCache = ["Hello", "World"];
-key = 'test-array';
+let key = 'test-array';
 
 this.cache.saveItem(key, arrayToCache, null, 60).then((data) => {
     console.log("Saved data: ", data);
