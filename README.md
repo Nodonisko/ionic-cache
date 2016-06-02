@@ -135,24 +135,20 @@ loadList(pageNumber) {
 
 #### Cache non-observables (arrays, strings etc.)
 
-This is not so smart, you must call *getItem* twice... It will be improved in upcoming versions.
+You can cache numbers, strings, arrays, objects etc.
 
 ```js
 ...
 let arrayToCache = ["Hello", "World"];
-let cacheKey = "my-array";
+key = 'test-array';
 
-return new Promise((resolve, reject) => {
-    this.cache.getItem().then(item => {
-        resolve(item);
-    }).catch(() => {
-        this.cache.saveItem(cacheKey, arrayToCache).then(() => {
-            this.cache.getItem().then(item => {
-                resolve(item);
-            });
-        });
-    });
+this.cache.saveItem(key, arrayToCache, null, 60).then((data) => {
+    console.log("Saved data: ", data);
 });
+
+this.cache.getItem(key).then((data) => {
+    console.log('Test of load saved data: ', data);
+})
 ...
 ```
 
