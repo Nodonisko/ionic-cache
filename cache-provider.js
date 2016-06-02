@@ -52,18 +52,22 @@ export class CacheProvider {
      * @param {any} data - Data to store
      * @param {string} [groupKey] - group key
      * @param {number} [ttl] - TTL in seconds
-     * @return {Promise<T>} - query execution promise
+     * @return {Promise<T>} - saved data
      */
     saveItem(key, data, groupKey = 'none', ttl = this.ttl) {
         if (!this.enableCache) return Promise.reject("Cache is not enabled.");
 
-        let expireTime = new Date().getTime() + ttl;
+        let expireTime = new Date().getTime() + (ttl * 1000);
         let type = this.isRequest(data) ? 'request' : typeof data;
         let value = JSON.stringify(data);
 
         let query = "INSERT OR REPLACE INTO " + this.tableName + " (key, value, expire, type, group_key) VALUES ('" + key + "', '" + value + "', " + expireTime + ", '" + type + "', '" + groupKey + "')";
 
-        return this.storage.query(query).catch(err => console.error(err));
+        return new Promise((resolve, reject) => {
+            this.storage.query(query).then(() => {
+                resolve(data);
+            }).catch(err => reject(err))
+        });
     }
 
     /**
