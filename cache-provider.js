@@ -4,17 +4,16 @@ import {Observable} from 'rxjs/Rx';
 import {Request, Response, ResponseOptions} from '@angular/http';
 
 @Injectable()
-export default class CacheProvider {
+export class CacheProvider {
 
     static get parameters() {
         return []
     }
 
-    static cacheKeys = ['key', 'unique', 'value', 'expire', 'type', 'group_key'];
-
     constructor() {
         this.ttl = 60 * 60 * 1000; //one hour in ms
         this.tableName = 'cache';
+        this.cacheKeys = ['key unique', 'value', 'expire', 'type', 'groupKey'];
 
         try {
             this.storage = new Storage(SqlStorage);
@@ -33,9 +32,9 @@ export default class CacheProvider {
      * @return {Promise<T>}
      */
     initDatabase() {
-        let query = `CREATE TABLE IF NOT EXISTS ${this.tableName} (${this.cacheKeys.join(', ')})`;
-
-        return this.storage.query(query);
+            let query = `CREATE TABLE IF NOT EXISTS ${this.tableName} (${this.cacheKeys.join(', ')})`;
+            
+            return this.storage.query(query);
     }
 
     /**
@@ -60,15 +59,15 @@ export default class CacheProvider {
             return Promise.reject("Cache is not enabled.");
         }
 
-        let expireTime = new Date().getTime() + (ttl * 1000);
+        let expire = new Date().getTime() + (ttl * 1000);
         let type = this.isRequest(data) ? 'request' : typeof data;
         let value = JSON.stringify(data);
-        const valuesMap = { key, value, expireTime, type, groupKey }
+        const valuesMap = { key, value, expire, type, groupKey }
         const values = Object.keys(valuesMap).map(key => `'${valuesMap[key]}'`)
 
-        let query = `INSERT OR REPLACE INTO ${this.tableName} (${Object.keys(valuesMap).join(', ')}) VALUES (${values.join(, )})`;
-
-        this.storage.query(query);
+        let query = `INSERT OR REPLACE INTO ${this.tableName} (${Object.keys(valuesMap).join(', ')}) VALUES (${values.join(', ')})`;
+        
+        return this.storage.query(query).then(() => data);
     }
 
     /**
@@ -98,7 +97,7 @@ export default class CacheProvider {
 
         return this.storage.query(query).then(data => {
             let result = data.res.rows.item(0);
-            if (result) {
+            if (!result) {
                 return Promise.reject(`No such key: ${key}`);
             } else {
                 return result;
@@ -115,7 +114,7 @@ export default class CacheProvider {
         if (!this.enableCache) {
             return Promise.reject("Cache is not enabled");
         }
-
+        
         return this.getRawItem(key).then(data => {
             if (data.expire < new Date().getTime()) {
                 return this.removeItem(key).then(() => {
@@ -195,7 +194,7 @@ export default class CacheProvider {
         }
 
         let datetime = new Date().getTime();
-        return this.storage.query(`DELETE FROM ${this.tableName} WHERE group_key = '${groupKey}'`);
+        return this.storage.query(`DELETE FROM ${this.tableName} WHERE groupKey = '${groupKey}'`);
     }
 
     /**
