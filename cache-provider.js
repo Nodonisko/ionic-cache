@@ -1,15 +1,16 @@
 import {Injectable} from '@angular/core';
 import {Storage, SqlStorage} from 'ionic-angular';
 import {Observable} from 'rxjs/Rx';
-import {Response, ResponseOptions} from '@angular/http';
+import {Request, Response, ResponseOptions} from '@angular/http';
 
 @Injectable()
-export class CacheProvider {
-
+export default class CacheProvider {
 
     static get parameters() {
         return []
     }
+
+    static cacheKeys = ['key', 'unique', 'value', 'expire', 'type', 'group_key'];
 
     constructor() {
         this.ttl = 60 * 60 * 1000; //one hour in ms
@@ -32,7 +33,7 @@ export class CacheProvider {
      * @return {Promise<T>}
      */
     initDatabase() {
-        let query = "CREATE TABLE IF NOT EXISTS " + this.tableName + " (key unique, value, expire, type, group_key)";
+        let query = `CREATE TABLE IF NOT EXISTS ${this.tableName} (${this.cacheKeys.join(', ')})`;
 
         return this.storage.query(query);
     }
@@ -55,19 +56,19 @@ export class CacheProvider {
      * @return {Promise<T>} - saved data
      */
     saveItem(key, data, groupKey = 'none', ttl = this.ttl) {
-        if (!this.enableCache) return Promise.reject("Cache is not enabled.");
+        if (!this.enableCache) {
+            return Promise.reject("Cache is not enabled.");
+        }
 
         let expireTime = new Date().getTime() + (ttl * 1000);
         let type = this.isRequest(data) ? 'request' : typeof data;
         let value = JSON.stringify(data);
+        const valuesMap = { key, value, expireTime, type, groupKey }
+        const values = Object.keys(valuesMap).map(key => `'${valuesMap[key]}'`)
 
-        let query = "INSERT OR REPLACE INTO " + this.tableName + " (key, value, expire, type, group_key) VALUES ('" + key + "', '" + value + "', " + expireTime + ", '" + type + "', '" + groupKey + "')";
+        let query = `INSERT OR REPLACE INTO ${this.tableName} (${Object.keys(valuesMap).join(', ')}) VALUES (${values.join(, )})`;
 
-        return new Promise((resolve, reject) => {
-            this.storage.query(query).then(() => {
-                resolve(data);
-            }).catch(err => reject(err))
-        });
+        this.storage.query(query);
     }
 
     /**
@@ -76,11 +77,11 @@ export class CacheProvider {
      * @return {Promise<T>} - query execution promise
      */
     removeItem(key) {
-        if (!this.enableCache) return Promise.reject("Cache is not enabled.");
+        if (!this.enableCache) {
+            return Promise.reject("Cache is not enabled.");
+        }
 
-        let query = "DELETE FROM " + this.tableName + " WHERE key = '" + key + "'";
-
-        return this.storage.query(query);
+        return this.storage.query(`DELETE FROM ${this.tableName} WHERE key = '${key}'`);
     }
 
     /**
@@ -89,18 +90,19 @@ export class CacheProvider {
      * @return {Promise} - data from cache
      */
     getRawItem(key) {
-        let query = "SELECT * FROM " + this.tableName + " WHERE key = '" + key + "'";
-        return new Promise((resolve, reject) => {
-            if (!this.enableCache) reject("Cache is not enabled");
+        if (!this.enableCache) {
+            return Promise.reject("Cache is not enabled");
+        }
 
-            this.storage.query(query).then(data => {
-                let rows = data.res.rows;
-                if (rows.length === 1) {
-                    resolve(rows.item(0));
-                } else {
-                    reject("No items found in database.");
-                }
-            }).catch(err => reject(err));
+        let query = `SELECT * FROM ${this.tableName} WHERE key = '${key}'`;
+
+        return this.storage.query(query).then(data => {
+            let result = data.res.rows.item(0);
+            if (result) {
+                return Promise.reject(`No such key: ${key}`);
+            } else {
+                return result;
+            }
         });
     }
 
@@ -110,33 +112,31 @@ export class CacheProvider {
      * @return {Promise<T>} - data from cache
      */
     getItem(key) {
-        return new Promise((resolve, reject) => {
-            if (!this.enableCache) reject("Cache is not enabled");
+        if (!this.enableCache) {
+            return Promise.reject("Cache is not enabled");
+        }
 
-            this.getRawItem(key).then(data => {
-                if (data.expire < new Date().getTime()) {
-                    this.removeItem(key).then(() => {
-                        reject("Cache entry already expired");
+        return this.getRawItem(key).then(data => {
+            if (data.expire < new Date().getTime()) {
+                return this.removeItem(key).then(() => {
+                    return Promise.reject("Cache entry already expired");
+                });
+            } else {
+                let dataJson = JSON.parse(data.value);
+                if (this.isRequest(dataJson)) {
+                    let requestOptions = new ResponseOptions({
+                        body: dataJson._body,
+                        status: dataJson.status,
+                        headers: dataJson.headers,
+                        statusText: dataJson.statusText,
+                        type: dataJson.type,
+                        url: dataJson.url
                     });
+                    return new Response(requestOptions);
                 } else {
-                    let dataJson = JSON.parse(data.value);
-                    if (this.isRequest(dataJson)) {
-                        let requestOptions = new ResponseOptions({
-                            body: dataJson._body,
-                            status: dataJson.status,
-                            headers: dataJson.headers,
-                            statusText: dataJson.statusText,
-                            type: dataJson.type,
-                            url: dataJson.url
-                        });
-                        resolve(new Response(requestOptions));
-                    } else {
-                        resolve(dataJson);
-                    }
+                    return dataJson;
                 }
-            }).catch(err => {
-                reject(err)
-            });
+            }
         });
     }
 
@@ -153,13 +153,10 @@ export class CacheProvider {
 
         observable = observable.share();
 
-        let data = Observable.fromPromise(this.getItem(key)).catch((e) => {
-            console.log(e, key);
+        return Observable.fromPromise(this.getItem(key)).catch((e) => {
             observable.subscribe(res => this.saveItem(key, res, groupKey, ttl));
             return observable;
         });
-
-        return data;
     }
 
     /**
@@ -167,11 +164,11 @@ export class CacheProvider {
      * @return {Promise}
      */
     removeAll() {
-        if (!this.enableCache) return Promise.reject("Cache is not enabled.");
+        if (!this.enableCache) {
+            return Promise.reject("Cache is not enabled.");
+        }
 
-        let query = "DELETE FROM " + this.tableName;
-
-        return this.storage.query(query);
+        return this.storage.query(`DELETE FROM ${this.tableName}`);
     }
 
     /**
@@ -179,12 +176,12 @@ export class CacheProvider {
      * @return {Promise<T>} - query promise
      */
     removeExpired() {
-        if (!this.enableCache) return Promise.reject("Cache is not enabled.");
+        if (!this.enableCache) {
+            return Promise.reject("Cache is not enabled.");
+        }
 
         let datetime = new Date().getTime();
-        let query = "DELETE FROM " + this.tableName + " WHERE expire < " + datetime;
-
-        return this.storage.query(query);
+        return this.storage.query(`DELETE FROM ${this.tableName} WHERE expire <  ${datetime}`);
     }
 
     /**
@@ -193,12 +190,12 @@ export class CacheProvider {
      * @return {Promise<T>} - query promise
      */
     removeByGroup(groupKey) {
-        if (!this.enableCache) return Promise.reject("Cache is not enabled.");
+        if (!this.enableCache) {
+            return Promise.reject("Cache is not enabled.");
+        }
 
         let datetime = new Date().getTime();
-        let query = "DELETE FROM " + this.tableName + " WHERE group_key = '" + groupKey + "'";
-
-        return this.storage.query(query);
+        return this.storage.query(`DELETE FROM ${this.tableName} WHERE group_key = '${groupKey}'`);
     }
 
     /**
@@ -207,9 +204,9 @@ export class CacheProvider {
      * @return {boolean} - data from cache
      */
     isRequest(data) {
-        if (typeof data == 'object' && data.hasOwnProperty('_body') && data.hasOwnProperty('status') &&
+        if (data instanceof Request || (typeof data == 'object' && data.hasOwnProperty('_body') && data.hasOwnProperty('status') &&
             data.hasOwnProperty('statusText') && data.hasOwnProperty('type') && data.hasOwnProperty('headers')
-            && data.hasOwnProperty('url')) {
+            && data.hasOwnProperty('url'))) {
             return true;
         } else {
             return false;
