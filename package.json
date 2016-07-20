@@ -1,6 +1,6 @@
 {
   "name": "ionic-cache",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Ionic cache service - cache request, data, promises etc.",
   "main": "ionic-cache.js",
   "scripts": {
