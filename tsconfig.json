@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "es5",
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "sourceMap": true,
+        "declaration": true
+    },
+    "files": [
+        "ionic-cache.ts",
+        "typings/index.d.ts"
+    ],
+    "exclude": [
+        "node_modules",
+        "typings/global",
+        "typings/global.d.ts"
+    ]
+}

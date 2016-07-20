@@ -1,6 +1,3 @@
-# Created by .ignore support plugin (hsz.mobi)
-/.idea
-.vscode/
 # Node generated files
 node_modules
 npm-debug.log
@@ -8,6 +5,5 @@ npm-debug.log
 Thumbs.db
 .DS_Store
 # Ignored files
-*.js
-*.map
-*.d.ts
+*.ts
+!*.d.ts
