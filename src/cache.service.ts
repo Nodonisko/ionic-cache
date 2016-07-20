@@ -296,12 +296,11 @@ export class CacheService {
    * @param {string} groupKey - group key
    * @return {Promise<any>} - query promise
    */
-  public removeByGroup(groupKey: string): Promise<any> {
+  public clearGroup(groupKey: string): Promise<any> {
     if (!this.enableCache) {
       return Promise.reject(MESSAGES[2]);
     }
 
-    let datetime = new Date().getTime();
     return this.storage.query(`DELETE FROM ${this.tableName} WHERE groupKey = '${groupKey}'`);
   }
 
