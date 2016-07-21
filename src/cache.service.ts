@@ -73,7 +73,7 @@ export class CacheService {
    * @param {boolean} offlineInvalidate
    */
   public setOfflineInvalidate(offlineInvalidate: boolean) {
-    this.invalidateOffline = offlineInvalidate;
+    this.invalidateOffline = !offlineInvalidate;
   }
 
   /**

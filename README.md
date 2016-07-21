@@ -229,5 +229,5 @@ this.cache.disableCache(true);
 If you want disable "don't invalidate" when device is offline, you can do it simply.
 
 ```js
-this.cache.setOfflineInvalidate(true);
+this.cache.setOfflineInvalidate(false);
 ```
