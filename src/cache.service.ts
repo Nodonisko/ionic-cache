@@ -35,6 +35,13 @@ export class CacheService {
   }
 
   /**
+   * @description Disable or enable cache
+   */
+  public disableCache(status: boolean = true) {
+    this.enableCache = !status;
+  }
+
+  /**
    * @description Create DB table for cache, if not exists
    * @return {Promise<any>}
    */

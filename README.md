@@ -1,61 +1,72 @@
-# Ionic 2 cache service
+# Ionic cache service
 
-My Ionic 2 cache service that can cache almost everything, include requests. It's made up to use WebSQL or SQLite 
-as storage and work well with Observables.
+Ionic cache service that can cache almost everything. **It caches request, observables, promises and classic data.** It uses WebSQL or SQLite 
+as storage and work well with Observables. With few little changes it can be used separatelety in Angular 2 application.
 
-**It's not well tested yet, so use it at your own risk.** Please report all bugs to bug report or fix it, or 
-better fix it and send pull request :)
+Key features:
++ Request caching
++ Delayed observable caching (see docs for more info)
++ Don't invalidate cache if is browser offline
++ Set and invalidate groups of entries
+
+Please report all bugs to bug report or fix it, or better fix it and send pull request :)
+
+#### Contributors
+
+Big thanks to all contributors for help. Currently only one Vojta Tranta, but I hope there will be more names in future :)
 
 ## Install
 
-Simple copy file to your providers folder and inject it in *app.js* file.
+Via NPM:
 
-```js
-import {CacheProvider} from "./providers/cache-provider/cache-provider";
+```bash
+npm install ionic-cache --save
+cordova add plugin cordova-sqlite-storage --save
+```
+
+And inject service to your app:
+
+```ts
+import {CacheService} from "ionic-cache/ionic-cache";
 
 @App({
-    templateUrl: "build/app.html",
-    providers: [CacheProvider]
+    templateUrl: "build/app.html"
 })
 class MyApp {
-    static get parameters() {
-        return [[IonicApp], [Platform], [CacheProvider]];
-    }
-
-    constructor(app, platform, cache) {
+    constructor(cache: CacheService) {
         ...
         this.cache = cache;
-
-        this.cache.setTTL(60); //set default cache TTL for 1 minute
+        this.cache.setDefaultTTL(60 * 60); //set default cache TTL for 1 hour
         ....
     }
     ...
+}
+ionicBootstrap(MyApp, [
+  CacheService
+]);
 ```
 
 ## Usage
 
-#### Cache request response body
+#### Cache request
 
-```js
-import {CacheProvider} from '../cache-provider/cache-provider';
+```ts
+...
+import {CacheService} from "ionic-cache/ionic-cache";
 
 @Injectable()
-export class CategoryProvider {
-    static get parameters() {
-        return [[Http], [CacheProvider]]
-    }
-
-    constructor(http, cache) {
+export class SomeProvider {
+    constructor(http: Http, cache: CacheService) {
         this.http = http;
         this.cache = cache;
     }
 
     loadList() {
-        let url = "http://google.com";
+        let url = "http://ip.jsontest.com";
         let cacheKey = url;
-
         let request = this.http.get(url).map(res => res.json());
-        return this.cache.loadItem(cacheKey, request);
+
+        return this.cache.loadFromObservable(cacheKey, request);
     }
     ...
 ```
@@ -63,20 +74,55 @@ export class CategoryProvider {
 #### Cache whole request response
 
 Sometimes you need to cache whole response, if you need to look to Headers etc. It can be done only with simple 
-move *.map(res => res.json())* after *loadItem* method. *LoadItem* returns Observable, so you can also use other 
-Observable operators
+move *.map(res => res.json())* after *loadFromObservable* method. *loadFromObservable* returns Observable, so you can also use other 
+Observable operators.
 
 ```js
 ...
 let request = this.http.get(url);
-return this.cache.loadItem(cacheKey, request).map(res => res.json());
+return this.cache.loadFromObservable(cacheKey, request).map(res => res.json());
+...
+```
+
+#### Cache classic data (arrays, objects, strings, numbers etc.)
+
+Cache service works well with observables, but you can cache classic data as well.
+
+```js
+...
+let key = 'heavily-calculated-function';
+
+this.cache.getItem(key).catch(() => {
+    // fall here if item is expired or doesn't exist
+    let result = heavilyCalculatedFunction();
+    return this.cache.saveItem(key, result);
+}).then((data) => {
+    console.log("Saved data: ", data);
+});
+...
+```
+
+#### Cache promises
+
+```js
+...
+let key = 'some-promise';
+
+this.cache.getItem(key).catch(() => {
+    // fall here if item is expired or doesn't exist
+    return somePromiseFunction().then(result => {
+        return this.cache.saveItem(key, result);
+    });
+}).then((data) => {
+    console.log("Saved data: ", data);
+});
 ...
 ```
 
 #### Cache with custom Observable operators
 
-*LoadItem* method using Observable and return Observable, so you can use lot of Observable operators. 
-For example error handling (on error, retry request every 6 seconds):
+*loadFromObservable* method using Observable and return Observable, so you are free to use all Observable operators. 
+For example error handling (on error, retry request every 6 seconds if fails):
 
 ```js
 ...
@@ -84,36 +130,57 @@ let request = this.http.get(url)
                     .retryWhen((error) => {
                         return error.timer(6000);
                     }).map(res => res.json());
-return this.cache.loadItem(cacheKey, request);
+return this.cache.loadFromObservable(cacheKey, request);
 ...
 ```
 
 #### Cache entries grouping
 
-This is really nice feature. Sometimes you need to invalidate only some group of cache entries.
+Sometimes you need to invalidate only some group of cache entries.
 For example if you have have long infinite scroll with lots of pages, and user trigger pull to request you want to delete
-all cache entries for all pages. So this is time for third parameter groupKey.
+all cache entries for all pages. So this is time for third parameter.
 
 ```js
 ...
 loadList(pageNumber) {
     let url = "http://google.com/?page=" + pageNumber;
     let cacheKey = url;
-    let groupKey = "googleListPages"
+    let groupKey = "googleSearchPages"
 
     let request = this.http.get(url).map(res => res.json());
-    return this.cache.loadItem(cacheKey, request, groupKey);
+    return this.cache.loadFromObservable(cacheKey, request, groupKey);
 }
 ...
 ```
 
-And on pull to refresh delete all cache entries in group *googleListPages*:
+And when pull to refresh is fired, delete all cache entries in group *googleListPages*:
 
 ```js
 ...
 pullToRefresh() {
-    this.cache.removeByGroup("googleListPages");
+    this.cache.clearGroup("googleSearchPages");
 }
+...
+```
+
+#### Delayed observable caching
+
+Features that using full power of observables. When you call this method and it will return data from cache (even if they are expired) 
+and immediately send request to server and return new data after request successfuly finish. See example for more details:
+
+```js
+...
+    let request = this.http.get(url).map(res => res.json());
+    let delayType = 'all'; // send new request to server everytime, if it's set to none it will send new request only when entry is expired
+    let response = this.cache.loadFromDelayedObservable(cacheKey, request, groupKey, ttl, delayType);
+
+    response.subscribe(data => {
+        console.log("Data:" data);
+    });
+
+    //result will look like this:
+    // Data: "Hello world from cache"
+    // Data: "Hello world from server"
 ...
 ```
 
@@ -122,48 +189,10 @@ pullToRefresh() {
 If you want custom TTL for single request, it can by easily done by third parameter.
 
 ```js
-...
-loadList(pageNumber) {
-    ...
-    let ttl = 60 * 60 * 24 * 7; // TTL in seconds for one week
+let ttl = 60 * 60 * 24 * 7; // TTL in seconds for one week
+let request = this.http.get(url).map(res => res.json());
 
-    let request = this.http.get(url).map(res => res.json());
-    return this.cache.loadItem(cacheKey, request, groupKey, ttl);
-}
-...
-```
-
-#### Cache non-observables (arrays, strings etc.)
-
-You can cache numbers, strings, arrays, objects etc.
-
-```js
-...
-let arrayToCache = ["Hello", "World"];
-let key = 'test-array';
-
-this.cache.saveItem(key, arrayToCache, null, 60).then((data) => {
-    console.log("Saved data: ", data);
-});
-
-this.cache.getItem(key).then((data) => {
-    console.log('Test of load saved data: ', data);
-})
-...
-```
-
-#### Delete expired entries
-
-It's automatically done on every startup, but you can do it manually.
-
-```js
-this.cache.removeExpired();
-```
-
-#### Delete all entries
-
-```js
-this.cache.removeAll();
+return this.cache.loadFromObservable(cacheKey, request, groupKey, ttl);
 ```
 
 #### Set default TTL
@@ -172,15 +201,33 @@ this.cache.removeAll();
 this.cache.setDefaultTTL(60 * 60); //set default cache TTL for 1 hour
 ```
 
-#### Disable cache
+#### Delete expired entries
 
-If you are using *loadItem* method you can disable cache without any worrying, it will pass origin Observable through.
-Other method will return Promise reject.
+It's automatically done on every startup, but you can do it manually.
 
 ```js
-this.cache.enableCache = false; //Disable cache
+this.cache.clearExpired();
 ```
 
+#### Delete all entries
 
+```js
+this.cache.clearAll();
+```
 
-For more inspiration look into code :)
+#### Disable cache
+
+You can disable cache without any worrying, it will pass origin Observable through and all Promises will be rejected.
+Without any errors.
+
+```js
+this.cache.disableCache(true);
+```
+
+#### Disable offline invalidate
+
+If you want disable "don't invalidate" when device is offline, you can do it simply.
+
+```js
+this.cache.setOfflineInvalidate(true);
+```
