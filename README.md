@@ -21,7 +21,7 @@ Via NPM:
 
 ```bash
 npm install ionic-cache --save
-cordova add plugin cordova-sqlite-storage --save
+cordova plugin add cordova-sqlite-storage --save
 ```
 
 And inject service to your app:
