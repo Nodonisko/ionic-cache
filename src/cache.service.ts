@@ -213,12 +213,12 @@ export class CacheService {
   /**
    * @description Load item from cache if it's in cache or load from origin observable
    * @param {string} key - Unique key
-   * @param {Observable<any>} observable - Observable with data
+   * @param {any} observable - Observable with data
    * @param {string} [groupKey] - group key
    * @param {number} [ttl] - TTL in seconds
-   * @return {Observable<any>} - data from cache or origin observable
+   * @return {any} - data from cache or origin observable
    */
-  public loadFromObservable(key: string, observable: Observable<any>, groupKey?: string, ttl?: number): Observable<any> {
+  public loadFromObservable(key: string, observable: any, groupKey?: string, ttl?: number): any {
     if (!this.enableCache) return observable;
 
     observable = observable.share();
@@ -232,12 +232,12 @@ export class CacheService {
   /**
    * @description Load item from cache if it's in cache or load from origin observable
    * @param {string} key - Unique key
-   * @param {Observable<any>} observable - Observable with data
+   * @param {any} observable - Observable with data
    * @param {string} [groupKey] - group key
    * @param {number} [ttl] - TTL in seconds
-   * @return {Observable<any>} - data from cache or origin observable
+   * @return {any} - data from cache or origin observable
    */
-  public loadFromDelayedObservable(key: string, observable: Observable<any>, groupKey?: string, ttl: number = this.ttl, delayType: string = "expired"): Observable<any> {
+  public loadFromDelayedObservable(key: string, observable: any, groupKey?: string, ttl: number = this.ttl, delayType: string = "expired"): any {
     if (!this.enableCache) return observable;
 
     let observableSubject = new Subject();
