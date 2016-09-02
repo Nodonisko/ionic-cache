@@ -35,7 +35,6 @@ import {CacheService} from "ionic-cache/ionic-cache";
 class MyApp {
     constructor(cache: CacheService) {
         ...
-        this.cache = cache;
         this.cache.setDefaultTTL(60 * 60); //set default cache TTL for 1 hour
         ....
     }
