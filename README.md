@@ -9,6 +9,9 @@ Key features:
 + Don't invalidate cache if is browser offline
 + Set and invalidate groups of entries
 
+TO DO:
++ Add cordova-sqlite-storage plugin support again
+
 Please report all bugs to bug report or fix it, or better fix it and send pull request :)
 
 #### Contributors
@@ -21,10 +24,27 @@ Via NPM:
 
 ```bash
 npm install ionic-cache --save
-cordova plugin add cordova-sqlite-storage --save
 ```
 
 And inject service to your app:
+
+*app.module.ts*
+
+```ts
+import {CacheService} from "ionic-cache/ionic-cache";
+
+@NgModule({
+  ...
+  bootstrap: [IonicApp],
+  entryComponents: [
+    MyApp,
+    AboutPage
+  ],
+  providers: [CacheService],
+})
+```
+
+*app.component.ts*
 
 ```ts
 import {CacheService} from "ionic-cache/ionic-cache";
@@ -40,9 +60,6 @@ class MyApp {
     }
     ...
 }
-ionicBootstrap(MyApp, [
-  CacheService
-]);
 ```
 
 ## Usage

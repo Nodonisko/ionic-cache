@@ -23,7 +23,6 @@ export class CacheService {
   private networkStatus: boolean = true;
 
   constructor() {
-    console.log('constructor');
     try {
       this.storage = new SqlStorage();
       this.watchNetworkInit();
@@ -127,8 +126,6 @@ export class CacheService {
     const values = Object.keys(valuesMap).map(key => `'${valuesMap[key]}'`);
 
     let query = `INSERT OR REPLACE INTO ${this.tableName} (${Object.keys(valuesMap).join(', ')}) VALUES (${values.join(', ')})`;
-
-    console.log(query);
 
     return this.storage.query(query).then(() => data);
   }
