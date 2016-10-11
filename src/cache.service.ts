@@ -4,16 +4,16 @@ import {Observable, Subject} from 'rxjs/Rx';
 import {Request, Response, ResponseOptions} from '@angular/http';
 
 const MESSAGES = {
-  0: "Cache initialization error: ",
-  1: "Cache is not enabled.",
-  2: "Cache entry already expired: ",
-  3: "No such key: ",
-  4: "No enteries were deleted, because browser is offline."
-}
+  0: 'Cache initialization error: ',
+  1: 'Cache is not enabled.',
+  2: 'Cache entry already expired: ',
+  3: 'No such key: ',
+  4: 'No enteries were deleted, because browser is offline.'
+};
 
 @Injectable()
 export class CacheService {
-  private ttl: number = 60 * 60; //one hour
+  private ttl: number = 60 * 60; // one hour
   private tableName: string = 'cache';
   private cacheKeys: string[] = ['key unique', 'value', 'expire INTEGER', 'type', 'groupKey'];
   private storage: SqlStorage;
@@ -123,12 +123,14 @@ export class CacheService {
     let expire = new Date().getTime() + (ttl * 1000);
     let type = CacheService.isRequest(data) ? 'request' : typeof data;
     let value = JSON.stringify(data);
-    const valuesMap = { key, value, expire, type, groupKey }
-    const values = Object.keys(valuesMap).map(key => valuesMap[key])
+    const valuesMap = { key, value, expire, type, groupKey };
+    const values = Object.keys(valuesMap).map(key => `'${valuesMap[key]}'`);
 
-    let query = `INSERT OR REPLACE INTO ${this.tableName} (${Object.keys(valuesMap).join(', ')}) VALUES (${Object.keys(valuesMap).fill('?').join(', ')})`;
+    let query = `INSERT OR REPLACE INTO ${this.tableName} (${Object.keys(valuesMap).join(', ')}) VALUES (${values.join(', ')})`;
 
-    return this.storage.query(query, values).then(() => data);
+    console.log(query);
+
+    return this.storage.query(query).then(() => data);
   }
 
   /**
@@ -175,8 +177,8 @@ export class CacheService {
     }
 
     return this.getRawItem(key).then(data => {
-        if (data.expire < new Date().getTime()){
-          if(this.invalidateOffline) {
+        if (data.expire < new Date().getTime()) {
+          if (this.invalidateOffline) {
             return Promise.reject(MESSAGES[2] + key);
           } else if (this.isOnline()) {
             return Promise.reject(MESSAGES[2] + key);
@@ -236,7 +238,7 @@ export class CacheService {
    * @param {number} [ttl] - TTL in seconds
    * @return {Observable<any>} - data from cache or origin observable
    */
-  public loadFromDelayedObservable(key: string, observable: any, groupKey?: string, ttl: number = this.ttl, delayType: string = "expired"): Observable<any> {
+  public loadFromDelayedObservable(key: string, observable: any, groupKey?: string, ttl: number = this.ttl, delayType: string = 'expired'): Observable<any> {
     if (!this.enableCache) return observable;
 
     let observableSubject = new Subject();
@@ -244,23 +246,23 @@ export class CacheService {
 
     let subscribeOrigin = () => {
       observable.subscribe(res => {
-        this.saveItem(key, res, groupKey, ttl)
+        this.saveItem(key, res, groupKey, ttl);
         observableSubject.next(res);
       }, null, () => {
         observableSubject.complete();
       });
-    }
+    };
 
     this.getItem(key).then((data) => {
       observableSubject.next(data);
-      if(delayType == 'all'){
+      if (delayType === 'all') {
         subscribeOrigin();
       }
     }, (e) => {
       this.getRawItem(key).then(res => {
         observableSubject.next(CacheService.decodeRawData(res));
       }).then(() => {
-        subscribeOrigin()
+        subscribeOrigin();
       }).catch(() => subscribeOrigin());
     });
 
@@ -289,7 +291,7 @@ export class CacheService {
       return Promise.reject(MESSAGES[2]);
     }
 
-    if(!this.isOnline() && !ignoreOnlineStatus) {
+    if (!this.isOnline() && !ignoreOnlineStatus) {
       return Promise.reject(MESSAGES[4]);
     }
 
@@ -316,7 +318,7 @@ export class CacheService {
    * @return {boolean} - data from cache
    */
   public static isRequest(data: any): boolean {
-    if (data instanceof Request || (typeof data == 'object' && data.hasOwnProperty('_body') && data.hasOwnProperty('status') &&
+    if (data instanceof Request || (typeof data === 'object' && data.hasOwnProperty('_body') && data.hasOwnProperty('status') &&
       data.hasOwnProperty('statusText') && data.hasOwnProperty('type') && data.hasOwnProperty('headers')
       && data.hasOwnProperty('url'))) {
       return true;
