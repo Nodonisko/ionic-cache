@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {Storage, SqlStorage} from 'ionic-angular';
+import {SqlStorage} from './storage';
 import {Observable, Subject} from 'rxjs/Rx';
 import {Request, Response, ResponseOptions} from '@angular/http';
 
@@ -8,7 +8,7 @@ const MESSAGES = {
   1: "Cache is not enabled.",
   2: "Cache entry already expired: ",
   3: "No such key: ",
-  4: "No enteries were deleted, because browser is offline.",
+  4: "No enteries were deleted, because browser is offline."
 }
 
 @Injectable()
@@ -16,15 +16,16 @@ export class CacheService {
   private ttl: number = 60 * 60; //one hour
   private tableName: string = 'cache';
   private cacheKeys: string[] = ['key unique', 'value', 'expire INTEGER', 'type', 'groupKey'];
-  private storage: Storage;
+  private storage: SqlStorage;
   private enableCache: boolean = true;
   private invalidateOffline: boolean = false;
   private networkStatusChanges: Observable<boolean>;
   private networkStatus: boolean = true;
 
   constructor() {
+    console.log('constructor');
     try {
-      this.storage = new Storage(SqlStorage);
+      this.storage = new SqlStorage();
       this.watchNetworkInit();
       this.initDatabase();
       this.enableCache = true;
@@ -154,14 +155,12 @@ export class CacheService {
     }
 
     let query = `SELECT * FROM ${this.tableName} WHERE key = '${key}'`;
-
-    return this.storage.query(query).then(data => {
-      let result = data.res.rows.item(0);
-      if (!result) {
+    return this.storage.query(query).then((data: SQLResultSet) => {
+      if (data.rows.length === 0 || !data.rows.item(0)) {
         return Promise.reject(MESSAGES[3] + key);
-      } else {
-        return result;
       }
+      
+      return data.rows.item(0);
     });
   }
 
@@ -216,9 +215,9 @@ export class CacheService {
    * @param {any} observable - Observable with data
    * @param {string} [groupKey] - group key
    * @param {number} [ttl] - TTL in seconds
-   * @return {any} - data from cache or origin observable
+   * @return {Observable<any>} - data from cache or origin observable
    */
-  public loadFromObservable(key: string, observable: any, groupKey?: string, ttl?: number): any {
+  public loadFromObservable(key: string, observable: any, groupKey?: string, ttl?: number): Observable<any> {
     if (!this.enableCache) return observable;
 
     observable = observable.share();
@@ -235,9 +234,9 @@ export class CacheService {
    * @param {any} observable - Observable with data
    * @param {string} [groupKey] - group key
    * @param {number} [ttl] - TTL in seconds
-   * @return {any} - data from cache or origin observable
+   * @return {Observable<any>} - data from cache or origin observable
    */
-  public loadFromDelayedObservable(key: string, observable: any, groupKey?: string, ttl: number = this.ttl, delayType: string = "expired"): any {
+  public loadFromDelayedObservable(key: string, observable: any, groupKey?: string, ttl: number = this.ttl, delayType: string = "expired"): Observable<any> {
     if (!this.enableCache) return observable;
 
     let observableSubject = new Subject();
