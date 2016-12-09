@@ -121,7 +121,7 @@ export class CacheService {
 
     let expire = new Date().getTime() + (ttl * 1000);
     let type = CacheService.isRequest(data) ? 'request' : typeof data;
-    let value = JSON.stringify(data);
+    let value = JSON.stringify(data).replace(/'/g, "''");
     const valuesMap = { key, value, expire, type, groupKey };
     const values = Object.keys(valuesMap).map(key => `'${valuesMap[key]}'`);
 
