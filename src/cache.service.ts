@@ -125,9 +125,9 @@ export class CacheService {
     const valuesMap = { key, value, expire, type, groupKey };
     const values = Object.keys(valuesMap).map(key => `'${valuesMap[key]}'`);
 
-    let query = `INSERT OR REPLACE INTO ${this.tableName} (${Object.keys(valuesMap).join(', ')}) VALUES (${values.join(', ')})`;
+    let query = `INSERT OR REPLACE INTO ${this.tableName} (${Object.keys(valuesMap).join(', ')}) VALUES (${values.map(()=>'?').join(', ')})`;
 
-    return this.storage.query(query).then(() => data);
+    return this.storage.query(query, values).then(() => data);
   }
 
   /**

@@ -9,10 +9,10 @@ export class SqlStorage {
      * @description Call database query
      * @return {Promise<any>}
      */
-    public query(query: String): Promise<any> {
+    public query(query: String, values: any[] = []): Promise<any> {
         return new Promise((resolve, reject) => {
             this.database.transaction((tx) => {
-                tx.executeSql(query, [], (tx, rs) => {
+                tx.executeSql(query, values, (tx, rs) => {
                    resolve(rs); 
                 }, (tx, err) => {
                     reject(err);
