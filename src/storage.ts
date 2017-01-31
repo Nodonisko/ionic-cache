@@ -13,7 +13,7 @@ export class SqlStorage {
         return new Promise((resolve, reject) => {
             this.database.transaction((tx) => {
                 tx.executeSql(query, values, (tx, rs) => {
-                   resolve(rs); 
+                    resolve(rs);
                 }, (tx, err) => {
                     reject(err);
                     return false;

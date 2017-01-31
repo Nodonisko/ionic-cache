@@ -1,7 +1,7 @@
-import {Injectable} from '@angular/core';
-import {SqlStorage} from './storage';
-import {Observable, Subject} from 'rxjs/Rx';
-import {Request, Response, ResponseOptions} from '@angular/http';
+import { Injectable } from '@angular/core';
+import { SqlStorage } from './storage';
+import { Observable, Subject } from 'rxjs/Rx';
+import { Request, Response, ResponseOptions } from '@angular/http';
 
 const MESSAGES = {
   0: 'Cache initialization error: ',
@@ -80,14 +80,14 @@ export class CacheService {
    * @description Start watching if devices is online or offline
    */
   private watchNetworkInit() {
-        this.networkStatus = navigator.onLine;
-        var connect = Observable.fromEvent(window, 'online').map(() => true);
-        var disconnect = Observable.fromEvent(window, 'offline').map(() => false);
+    this.networkStatus = navigator.onLine;
+    var connect = Observable.fromEvent(window, 'online').map(() => true);
+    var disconnect = Observable.fromEvent(window, 'offline').map(() => false);
 
-        this.networkStatusChanges = Observable.merge(connect, disconnect).share();
-        this.networkStatusChanges.subscribe(status => {
-            this.networkStatus = status;
-        });
+    this.networkStatusChanges = Observable.merge(connect, disconnect).share();
+    this.networkStatusChanges.subscribe(status => {
+      this.networkStatus = status;
+    });
   }
 
   /**
@@ -125,7 +125,7 @@ export class CacheService {
     const valuesMap = { key, value, expire, type, groupKey };
     const values = Object.keys(valuesMap).map(key => `'${valuesMap[key]}'`);
 
-    let query = `INSERT OR REPLACE INTO ${this.tableName} (${Object.keys(valuesMap).join(', ')}) VALUES (${values.map(()=>'?').join(', ')})`;
+    let query = `INSERT OR REPLACE INTO ${this.tableName} (${Object.keys(valuesMap).join(', ')}) VALUES (${values.map(() => '?').join(', ')})`;
 
     return this.storage.query(query, values).then(() => data);
   }
@@ -158,7 +158,6 @@ export class CacheService {
       if (data.rows.length === 0 || !data.rows.item(0)) {
         return Promise.reject(MESSAGES[3] + key);
       }
-      
       return data.rows.item(0);
     });
   }
@@ -174,23 +173,23 @@ export class CacheService {
     }
 
     return this.getRawItem(key).then(data => {
-        if (data.expire < new Date().getTime()) {
-          if (this.invalidateOffline) {
-            return Promise.reject(MESSAGES[2] + key);
-          } else if (this.isOnline()) {
-            return Promise.reject(MESSAGES[2] + key);
-          }
+      if (data.expire < new Date().getTime()) {
+        if (this.invalidateOffline) {
+          return Promise.reject(MESSAGES[2] + key);
+        } else if (this.isOnline()) {
+          return Promise.reject(MESSAGES[2] + key);
         }
-      
+      }
+
       return CacheService.decodeRawData(data);
     });
   }
 
-   /**
-   * @description Decode raw data from DB
-   * @param {any} data - Data
-   * @return {any} - decoded data
-   */
+  /**
+  * @description Decode raw data from DB
+  * @param {any} data - Data
+  * @return {any} - decoded data
+  */
   public static decodeRawData(data: any): any {
     let dataJson = JSON.parse(data.value);
     if (CacheService.isRequest(dataJson)) {
@@ -280,7 +279,7 @@ export class CacheService {
 
   /**
    * @description Remove all expired items from cache
-   * @param {boolean} ignoreOnlineStatus - 
+   * @param {boolean} ignoreOnlineStatus -
    * @return {Promise<any>} - query promise
    */
   public clearExpired(ignoreOnlineStatus = false): Promise<any> {
