@@ -123,7 +123,7 @@ export class CacheService {
     let type = CacheService.isRequest(data) ? 'request' : typeof data;
     let value = JSON.stringify(data);
     const valuesMap = { key, value, expire, type, groupKey };
-    const values = Object.keys(valuesMap).map(key => `'${valuesMap[key]}'`);
+    const values = Object.keys(valuesMap).map(key => `${valuesMap[key]}`);
 
     let query = `INSERT OR REPLACE INTO ${this.tableName} (${Object.keys(valuesMap).join(', ')}) VALUES (${values.map(() => '?').join(', ')})`;
 
