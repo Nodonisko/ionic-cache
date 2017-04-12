@@ -314,9 +314,9 @@ export class CacheService {
    * @return {boolean} - data from cache
    */
   public static isRequest(data: any): boolean {
-    if (data instanceof Request || (typeof data === 'object' && data.hasOwnProperty('_body') && data.hasOwnProperty('status') &&
+    if (data && (data instanceof Request || (typeof data === 'object' && data.hasOwnProperty('_body') && data.hasOwnProperty('status') &&
       data.hasOwnProperty('statusText') && data.hasOwnProperty('type') && data.hasOwnProperty('headers')
-      && data.hasOwnProperty('url'))) {
+      && data.hasOwnProperty('url')))) {
       return true;
     } else {
       return false;
