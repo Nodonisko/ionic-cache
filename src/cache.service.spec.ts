@@ -18,22 +18,23 @@ TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicT
 describe('CacheService', () => {
 
   let service: CacheService;
+  const ttl = 1;
+  const key = 'https://github.com/Nodonisko/ionic-cache';
+  const groupKey = 'fooGroup';
+  const cacheValue = 'ibby';
 
   beforeAll(function(done) {
     service = new CacheService(new Storage({
       name: '__ionicCache',
       driverOrder: ['indexeddb', 'sqlite', 'websql']
     }));
-    service.ready().then(() => {
-      service.enableCache(true);
-      done();
-    });
+    service.ready().then(done);
   });
 
   it('should create an instance of the service', () => expect(service).toBeDefined());
 
   it('should save item to storage (async)', done => {
-    service.saveItem('name', 'ibby')
+    service.saveItem(key, cacheValue, groupKey, ttl)
       .then(() => {
         expect(true).toBeTruthy();
         done();
@@ -45,15 +46,29 @@ describe('CacheService', () => {
   });
 
   it('should get previously stored value (async)', done => {
-    service.getItem('name')
+    service.getItem(key)
       .then(value => {
-        expect(value).toEqual('ibby');
+        expect(value).toEqual(cacheValue);
         done();
       })
       .catch((e) => {
         expect(e).toBeUndefined();
         done();
       });
+  });
+
+  it('should throw error because cache expired (async)', done => {
+    setTimeout(() => {
+      service.getItem(key)
+      .then(value => {
+        expect(false).toBeTruthy();
+        done();
+      })
+      .catch((e) => {
+        expect(e).not.toBeUndefined();
+        done();
+      });
+    }, ttl * 1000 + 1);
   });
 
   it('should disable cache', () => {
