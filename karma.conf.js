@@ -28,9 +28,6 @@ module.exports = config => {
       },
       compilerOptions: {
         lib: ['es2015', 'dom']
-      },
-      coverageOptions: {
-        instrumentation: true
       }
     },
 
@@ -38,7 +35,7 @@ module.exports = config => {
       { pattern: 'src/**/*', included: true, watched: true },
     ],
 
-    reporters: ['progress', 'karma-typescript'],
+    reporters: ['progress'],
 
     port: 9876,
     colors: true,
