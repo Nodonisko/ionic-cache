@@ -9,8 +9,10 @@
     "dist"
   ],
   "scripts": {
-    "pretest": "rm -rf dist && tsc",
+    "pretest": "rm -rf dist aot && tsc",
     "test": "karma start karma.conf.js --single-run",
+    "pretest:watch": "npm run pretest",
+    "test:watch": "concurrently \"tsc -w\" \"karma start karma.conf.js\"",
     "build": "rm -rf dist aot && ngc"
   },
   "repository": {
@@ -43,6 +45,7 @@
     "babel": "^6.23.0",
     "babel-polyfill": "^6.23.0",
     "babel-preset-es2015": "^6.24.1",
+    "concurrently": "^3.4.0",
     "jasmine-core": "^2.6.1",
     "karma": "^1.6.0",
     "karma-babel-preprocessor": "^6.0.1",
