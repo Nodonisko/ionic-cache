@@ -322,8 +322,17 @@ export class CacheService {
    * @return {boolean} - data from cache
    */
   static isRequest(data: any): boolean {
-    return (data && (data instanceof Request || (typeof data === 'object' && data.hasOwnProperty('_body') && data.hasOwnProperty('status') &&
-    data.hasOwnProperty('statusText') && data.hasOwnProperty('type') && data.hasOwnProperty('headers')
-    && data.hasOwnProperty('url'))));
+    return (
+      data && (
+        data instanceof Request ||
+        (
+          typeof data === 'object' && data.hasOwnProperty('_body') && data.hasOwnProperty('status') &&
+          data.hasOwnProperty('statusText') &&
+          data.hasOwnProperty('type') &&
+          data.hasOwnProperty('headers') &&
+          data.hasOwnProperty('url')
+        )
+      )
+    );
   }
 }
