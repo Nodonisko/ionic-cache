@@ -1,22 +1,21 @@
 # Ionic cache service
 
-Ionic cache service that can cache almost everything. **It caches request, observables, promises and classic data.** It uses WebSQL or SQLite 
-as storage and work well with Observables. With few little changes it can be used separatelety in Angular 2 application.
+Ionic cache service that can cache almost everything. **It caches requests, observables, promises and classic data.** It uses [Ionic Storage](https://ionicframework.com/docs/storage/) so we support IndexedDB, SQLite (Cordova), WebSQL in this order.
+It can be used separatelety in Angular 2 application.
 
 Key features:
 + Request caching
 + Delayed observable caching (see docs for more info)
 + Don't invalidate cache if is browser offline
 + Set and invalidate groups of entries
++ Supports IndexedDB, SQLite (Cordova), WebSQL via Ionic Storage
 
-TO DO:
-+ Add cordova-sqlite-storage plugin support again
+Please report all bugs to bug report or fix it and send pull request :)
 
-Please report all bugs to bug report or fix it, or better fix it and send pull request :)
-
-#### Contributors
-
-Big thanks to all contributors for help. Currently only one Vojta Tranta, but I hope there will be more names in future :)
+#### Big thanks to all contributors for help:
++ Special thanks to [ihadeed](https://github.com/ihadeed)
++ [imatefx](https://github.com/imatefx)
++ [Vojta Tranta](https://github.com/vojtatranta)
 
 ## Install
 
@@ -30,6 +29,8 @@ or Yarn:
 ```bash
 yarn add ionic-cache
 ```
+
+You can optionally add [Cordova SQLite](https://ionicframework.com/docs/native/sqlite/).
 
 And inject service to your app:
 
