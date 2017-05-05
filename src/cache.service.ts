@@ -240,6 +240,7 @@ export class CacheService {
    * @param {any} observable - Observable with data
    * @param {string} [groupKey] - group key
    * @param {number} [ttl] - TTL in seconds
+   * @param {string} [delayType='expired']
    * @return {Observable<any>} - data from cache or origin observable
    */
   loadFromDelayedObservable(key: string, observable: any, groupKey?: string, ttl: number = this.ttl, delayType: string = 'expired'): Observable<any> {
