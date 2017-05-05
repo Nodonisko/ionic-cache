@@ -9,6 +9,7 @@ import 'rxjs/add/observable/merge';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/share';
 import 'rxjs/add/operator/catch';
+import { Storage } from '@ionic/storage';
 
 export const MESSAGES = {
   0: 'Cache initialization error: ',
@@ -30,7 +31,9 @@ export class CacheService {
   private networkStatusChanges: Observable<boolean>;
   private networkStatus: boolean = true;
 
-  constructor() {
+  constructor(
+    private _storage: Storage
+  ) {
     try {
       this.storage = new SqlStorage();
       this.watchNetworkInit();
