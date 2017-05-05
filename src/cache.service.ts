@@ -89,8 +89,8 @@ export class CacheService {
    */
   private watchNetworkInit() {
     this.networkStatus = navigator.onLine;
-    var connect = Observable.fromEvent(window, 'online').map(() => true);
-    var disconnect = Observable.fromEvent(window, 'offline').map(() => false);
+    const connect = Observable.fromEvent(window, 'online').map(() => true),
+      disconnect = Observable.fromEvent(window, 'offline').map(() => false);
 
     this.networkStatusChanges = Observable.merge(connect, disconnect).share();
     this.networkStatusChanges.subscribe(status => {
@@ -127,13 +127,12 @@ export class CacheService {
       return Promise.reject(MESSAGES[1]);
     }
 
-    let expire = new Date().getTime() + (ttl * 1000);
-    let type = CacheService.isRequest(data) ? 'request' : typeof data;
-    let value = JSON.stringify(data);
-    const valuesMap = { key, value, expire, type, groupKey };
-    const values = Object.keys(valuesMap).map(key => `${valuesMap[key]}`);
-
-    let query = `INSERT OR REPLACE INTO ${this.tableName} (${Object.keys(valuesMap).join(', ')}) VALUES (${values.map(() => '?').join(', ')})`;
+    const expire = new Date().getTime() + (ttl * 1000),
+      type = CacheService.isRequest(data) ? 'request' : typeof data,
+      value = JSON.stringify(data),
+      valuesMap = { key, value, expire, type, groupKey },
+      values = Object.keys(valuesMap).map(key => `${valuesMap[key]}`),
+      query = `INSERT OR REPLACE INTO ${this.tableName} (${Object.keys(valuesMap).join(', ')}) VALUES (${values.map(() => '?').join(', ')})`;
 
     return this.storage.query(query, values).then(() => data);
   }
@@ -201,7 +200,7 @@ export class CacheService {
   static decodeRawData(data: any): any {
     let dataJson = JSON.parse(data.value);
     if (CacheService.isRequest(dataJson)) {
-      let requestOptions = new ResponseOptions({
+      const requestOptions = new ResponseOptions({
         body: dataJson._body,
         status: dataJson.status,
         headers: dataJson.headers,
@@ -228,10 +227,11 @@ export class CacheService {
 
     observable = observable.share();
 
-    return Observable.fromPromise(this.getItem(key)).catch((e) => {
-      observable.subscribe(res => this.saveItem(key, res, groupKey, ttl));
-      return observable;
-    });
+    return Observable.fromPromise(this.getItem(key))
+      .catch((e) => {
+        observable.subscribe(res => this.saveItem(key, res, groupKey, ttl));
+        return observable;
+      });
   }
 
   /**
@@ -246,10 +246,10 @@ export class CacheService {
   loadFromDelayedObservable(key: string, observable: any, groupKey?: string, ttl: number = this.ttl, delayType: string = 'expired'): Observable<any> {
     if (!this.enableCache) return observable;
 
-    let observableSubject = new Subject();
+    const observableSubject = new Subject();
     observable = observable.share();
 
-    let subscribeOrigin = () => {
+    const subscribeOrigin = () => {
       observable.subscribe(res => {
         this.saveItem(key, res, groupKey, ttl);
         observableSubject.next(res);
@@ -258,18 +258,21 @@ export class CacheService {
       });
     };
 
-    this.getItem(key).then((data) => {
-      observableSubject.next(data);
-      if (delayType === 'all') {
-        subscribeOrigin();
-      }
-    }, (e) => {
-      this.getRawItem(key).then(res => {
-        observableSubject.next(CacheService.decodeRawData(res));
-      }).then(() => {
-        subscribeOrigin();
-      }).catch(() => subscribeOrigin());
-    });
+    this.getItem(key)
+      .then((data) => {
+        observableSubject.next(data);
+        if (delayType === 'all') {
+          subscribeOrigin();
+        }
+      })
+      .catch((e) => {
+        this.getRawItem(key)
+          .then(res => {
+            observableSubject.next(CacheService.decodeRawData(res));
+            subscribeOrigin();
+          })
+          .catch(() => subscribeOrigin());
+      });
 
     return observableSubject.asObservable();
   }
