@@ -175,11 +175,13 @@ export class CacheService {
    * @return {Promise<any>} - data from cache
    */
   getItem(key: string): Promise<any> {
+
     if (!this.cacheEnabled) {
       return Promise.reject(MESSAGES[1]);
     }
 
     return this.getRawItem(key).then(data => {
+
       if (data.expire < new Date().getTime()) {
         if (this.invalidateOffline) {
           return Promise.reject(MESSAGES[2] + key);
@@ -224,9 +226,7 @@ export class CacheService {
    */
   loadFromObservable(key: string, observable: any, groupKey?: string, ttl?: number): Observable<any> {
     if (!this.cacheEnabled) return observable;
-
     observable = observable.share();
-
     return Observable.fromPromise(this.getItem(key))
       .catch((e) => {
         observable.subscribe(res => this.saveItem(key, res, groupKey, ttl));

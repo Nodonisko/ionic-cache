@@ -8,21 +8,26 @@ import "zone.js/dist/async-test";
 import "zone.js/dist/fake-async-test";
 
 import { CacheService, MESSAGES } from './cache.service';
-import { async, TestBed, inject } from '@angular/core/testing';
-import {Http, HttpModule, XHRBackend, Response, ResponseOptions, RequestMethod} from "@angular/http";
-import {MockBackend, MockConnection} from '@angular/http/testing';
+import { async, TestBed } from '@angular/core/testing';
 
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from "@angular/platform-browser-dynamic/testing";
+import createSpy = jasmine.createSpy;
+import {Observable} from "rxjs/Observable";
+import 'rxjs/add/observable/of';
 
 TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting());
 
 describe('CacheService', () => {
 
-  let service: any;
+  let service: CacheService;
 
   beforeAll(() => {
     service = new CacheService();
   });
+
+  afterAll(async(() => {
+    service.clearAll();
+  }));
 
   it('should create an instance of the service', () => expect(service).toBeDefined());
 
@@ -56,49 +61,55 @@ describe('CacheService', () => {
 
 });
 
-describe('Http Caching', () => {
+describe('Observable Caching', () => {
 
   const key: string = 'http_cache_test';
 
-  const mockUrl: string = 'https://somelink.com/path/to/endpoint';
-
-  const mockResponse = {
+  let mockData: any = {
     hello: 'world'
   };
 
-  beforeEach(() => {
-    TestBed.configureTestingModule({
-      imports: [ HttpModule ],
-      providers: [
-        { provide: XHRBackend, useClass: MockBackend },
-        CacheService
-      ]
-    });
+  let observable = Observable.of(mockData);
+
+  let service: CacheService;
+
+  beforeAll(() => {
+    service = new CacheService();
   });
 
-  it('should create an instance of the service', inject([XHRBackend, CacheService], (mockBackend: XHRBackend, cache: CacheService) => {
-    expect(mockBackend).toBeDefined();
-    expect(cache).toBeDefined();
-  }));
+  beforeEach(() => {
+    spyOn(observable, 'subscribe').and.callThrough();
+  });
+
+  afterAll(function(done) {
+    service.clearAll()
+      .then(() => done())
+      .catch(() => done());
+  });
+
+  it('should create an instance of the service', () => {
+    expect(service).toBeDefined();
+  });
 
   // it('', inject([XHRBackend, CacheService], (mockBackend: XHRBackend, cache: CacheService) => { }))
 
-  it('should cache HTTP request', async(inject([XHRBackend, CacheService, Http], (mockBackend: MockBackend, cache: CacheService, http: Http) => {
-
-    mockBackend.connections.subscribe((connection: MockConnection) => {
-      expect(connection.request.method).toBe(RequestMethod.Get);
-      expect(connection.request.url).toBe(mockUrl);
-
-      connection.mockRespond(new Response(
-        new ResponseOptions({ body: mockResponse })
-      ));
-    });
-
-    cache.loadFromObservable(key, http.get(mockUrl))
+  it('should return data from observable (async)', function(done) {
+    service.loadFromObservable(key, observable)
       .subscribe(res => {
-        expect(res).toEqual(mockResponse);
+        expect(res).toBeDefined();
+        expect(observable.subscribe).toHaveBeenCalled();
+        expect(res).toEqual(mockData);
+        done();
       });
+  });
 
-  })));
+  it('should return cached observable data (async)', function(done) {
+      service.loadFromObservable(key, observable)
+        .subscribe(res => {
+          expect(observable.subscribe).not.toHaveBeenCalled();
+          expect(res).toEqual(mockData);
+          done();
+        });
+  });
 
 });

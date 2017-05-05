@@ -10,8 +10,7 @@
   ],
   "scripts": {
     "test": "karma start karma.conf.js --single-run",
-    "pretest:watch": "npm run pretest",
-    "test:watch": "concurrently \"tsc -w\" \"karma start karma.conf.js\"",
+    "test:watch": "karma start karma.conf.js",
     "build": "rm -rf dist aot && ngc"
   },
   "repository": {

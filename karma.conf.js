@@ -35,7 +35,6 @@ module.exports = config => {
     },
 
     files: [
-      'src/cache.service.spec.ts',
       { pattern: 'src/**/*', included: true, watched: true },
     ],
 
@@ -46,11 +45,15 @@ module.exports = config => {
     logLevel: config.INFO,
     autoWatch: true,
     browsers: [
-      // 'Chrome',
-      'PhantomJS'
+      'Chrome',
+      // 'PhantomJS'
     ],
     singleRun: false
   };
+
+  if (process.env.CIRCLECI) {
+    conf.browsers = ['PhantomJS'];
+  }
 
   config.set(conf);
 
