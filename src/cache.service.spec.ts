@@ -7,7 +7,7 @@ import 'zone.js/dist/jasmine-patch';
 import 'zone.js/dist/async-test';
 import 'zone.js/dist/fake-async-test';
 import { CacheService, MESSAGES } from './cache.service';
-import { async, TestBed } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/of';
@@ -19,44 +19,71 @@ describe('CacheService', () => {
 
   let service: CacheService;
 
-  beforeAll(() => {
+  beforeAll(function(done) {
     service = new CacheService(new Storage({
-      name: '__ionicCache'
+      name: '__ionicCache',
+      driverOrder: ['indexeddb', 'sqlite', 'websql']
     }));
+    service.ready().then(() =>{
+      service.enableCache(true);
+      done();
+    });
   });
-
-  afterAll(async(() => {
-    service.clearAll();
-  }));
 
   it('should create an instance of the service', () => expect(service).toBeDefined());
 
-  it('should save item to storage (async)', async(() => {
+  it('should save item to storage (async)', done => {
     service.saveItem('name', 'ibby')
-      .then(() => expect(true).toBeTruthy())
-      .catch(() => expect(false).toBeTruthy());
-  }));
+      .then(() => {
+        expect(true).toBeTruthy();
+        done();
+      })
+      .catch((e) => {
+        expect(e).toBeUndefined();
+        done();
+      });
+  });
 
-  it('should get previously stored value (async)', async(() => {
+  it('should get previously stored value (async)', done => {
     service.getItem('name')
-      .then(value => expect(value).toEqual('ibby'))
-      .catch(() => expect(false).toBeTruthy());
-  }));
+      .then(value => {
+        expect(value).toEqual('ibby');
+        done();
+      })
+      .catch((e) => {
+        expect(e).toBeUndefined();
+        done();
+      });
+  });
 
   it('should disable cache', () => {
     service.enableCache(false);
     expect((<any> service).cacheEnabled === false).toBeTruthy();
   });
 
-  it('should throw an error when getting item and cache is disabled', async(() => {
-    service.getItem('name')
-      .then(() => expect(false).toBeTruthy())
-      .catch((e) => expect(e).toEqual(MESSAGES[1]));
-  }));
+  it('should throw an error when getting item and cache is disabled', done => {
+    expect((<any> service).cacheEnabled === false).toBeTruthy();
+    return service.getItem('name')
+      .then((res) => {
+        expect(res).toBeUndefined();
+        done();
+      })
+      .catch((e) => {
+        expect(e).toEqual(MESSAGES[1]);
+        done();
+      });
+  });
 
   it('should enable cache', () => {
     service.enableCache(true);
     expect((<any> service).cacheEnabled === true).toBeTruthy();
+  });
+
+  afterAll(function(done) {
+    console.info('Clearing cache');
+    service.clearAll()
+      .then(done)
+      .catch(done);
   });
 
 });
@@ -73,20 +100,16 @@ describe('Observable Caching', () => {
 
   let service: CacheService;
 
-  beforeAll(() => {
+  beforeAll(done => {
     service = new CacheService(new Storage({
-      name: '__ionicCache'
+      name: '__ionicCache',
+      driverOrder: ['indexeddb', 'sqlite', 'websql']
     }));
+    service.ready().then(done);
   });
 
   beforeEach(() => {
     spyOn(observable, 'subscribe').and.callThrough();
-  });
-
-  afterAll(function(done) {
-    service.clearAll()
-      .then(() => done())
-      .catch(() => done());
   });
 
   it('should create an instance of the service', () => {
@@ -95,23 +118,35 @@ describe('Observable Caching', () => {
 
   // it('', inject([XHRBackend, CacheService], (mockBackend: XHRBackend, cache: CacheService) => { }))
 
-  it('should return data from observable (async)', function(done) {
+  it('should return data from observable (async)', (done: any) => {
     service.loadFromObservable(key, observable)
-      .subscribe(res => {
-        expect(res).toBeDefined();
-        expect(observable.subscribe).toHaveBeenCalled();
-        expect(res).toEqual(mockData);
-        done();
-      });
+      .subscribe(
+        res => {
+          expect(res).toBeDefined();
+          expect(observable.subscribe).toHaveBeenCalled();
+          expect(res).toEqual(mockData);
+          done();
+        },
+        err => {
+          console.info('Error in observable', err);
+          done(err);
+        }
+      );
   });
 
-  it('should return cached observable data (async)', function(done) {
+  it('should return cached observable data (async)', done => {
       service.loadFromObservable(key, observable)
         .subscribe(res => {
           expect(observable.subscribe).not.toHaveBeenCalled();
           expect(res).toEqual(mockData);
           done();
         });
+  });
+
+  afterAll(done => {
+    service.clearAll()
+      .then(done)
+      .catch(done);
   });
 
 });

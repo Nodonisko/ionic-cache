@@ -5,7 +5,8 @@ import { IonicStorageModule } from '@ionic/storage';
 @NgModule({
   imports: [
     IonicStorageModule.forRoot({
-      name: '__ionicCache'
+      name: '__ionicCache',
+      driverOrder: ['indexeddb', 'sqlite', 'websql']
     })
   ]
 })

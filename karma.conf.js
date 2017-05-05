@@ -23,7 +23,8 @@ module.exports = config => {
       bundlerOptions: {
         entrypoints: /\.spec\.ts$/,
         transforms: [
-          require("karma-typescript-angular2-transform")
+          require("karma-typescript-angular2-transform"),
+          require("karma-typescript-es6-transform")()
         ]
       },
       compilerOptions: {
