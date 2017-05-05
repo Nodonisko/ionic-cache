@@ -31,25 +31,22 @@ And inject service to your app:
 *app.module.ts*
 
 ```ts
-import {CacheService} from "ionic-cache/ionic-cache";
+import { CacheModule } from "ionic-cache";
 
 @NgModule({
   ...
-  bootstrap: [IonicApp],
-  entryComponents: [
-    MyApp,
-    AboutPage
+  imports: [
+    CacheModule.forRoot()
   ],
-  providers: [CacheService],
 })
 ```
 
 *app.component.ts*
 
 ```ts
-import {CacheService} from "ionic-cache/ionic-cache";
+import { CacheService } from "ionic-cache";
 
-@App({
+@Component({
     templateUrl: "build/app.html"
 })
 class MyApp {
@@ -68,14 +65,11 @@ class MyApp {
 
 ```ts
 ...
-import {CacheService} from "ionic-cache/ionic-cache";
+import { CacheService } from "ionic-cache";
 
 @Injectable()
 export class SomeProvider {
-    constructor(http: Http, cache: CacheService) {
-        this.http = http;
-        this.cache = cache;
-    }
+    constructor(private http: Http, private cache: CacheService) {}
 
     loadList() {
         let url = "http://ip.jsontest.com";
