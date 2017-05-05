@@ -2,9 +2,12 @@
   "name": "ionic-cache",
   "version": "1.1.2",
   "description": "Ionic cache service - cache request, data, promises etc.",
-  "main": "ionic-cache.js",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "module": "dist/index.js",
+  "files": ["dist"],
   "scripts": {
-    "prepublish": "tsc"
+    "build": "rm -rf dist aot && ngc"
   },
   "repository": {
     "type": "git",
@@ -22,19 +25,18 @@
     "url": "https://github.com/Nodonisko/ionic-cache/issues"
   },
   "homepage": "https://github.com/Nodonisko/ionic-cache#readme",
-  "dependencies": {
-    "@angular/common": "^2.4.2",
-    "@angular/core": "^2.0.2",
-    "@angular/http": "^2.0.2",
-    "@angular/platform-browser": "^2.0.2",
-    "rxjs": "^5.0.0-beta.12",
-    "zone.js": "^0.7.4"
-  },
   "devDependencies": {
+    "@angular/common": "^4.1.1",
+    "@angular/compiler": "^4.1.1",
+    "@angular/compiler-cli": "^4.1.1",
+    "@angular/core": "^4.1.1",
+    "@angular/http": "^4.1.1",
+    "@angular/platform-browser": "^4.1.1",
+    "@types/websql": "0.0.27",
+    "rxjs": "^5.3.1",
     "tslint": "^3.15.1",
     "tslint-ionic-rules": "^0.0.6",
-    "typescript": "^2.0.3",
-    "typings": "^1.4.0"
-  },
-  "typings": "./ionic-cache.d.ts"
+    "typescript": "^2.3.2",
+    "zone.js": "^0.8.10"
+  }
 }
