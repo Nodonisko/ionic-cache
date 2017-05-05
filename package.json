@@ -38,6 +38,7 @@
     "@angular/http": "^4.1.1",
     "@angular/platform-browser": "^4.1.1",
     "@angular/platform-browser-dynamic": "^4.1.1",
+    "@ionic/storage": "^2.0.1",
     "@types/jasmine": "^2.5.47",
     "@types/node": "^7.0.18",
     "@types/websql": "0.0.27",
@@ -49,10 +50,14 @@
     "karma-phantomjs-launcher": "^1.0.4",
     "karma-typescript": "^3.0.1",
     "karma-typescript-angular2-transform": "^1.0.0",
+    "karma-typescript-es6-transform": "^1.0.0",
     "rxjs": "^5.3.1",
     "tslint": "^3.15.1",
     "tslint-ionic-rules": "^0.0.7",
     "typescript": "^2.3.2",
     "zone.js": "^0.8.10"
+  },
+  "peerDependencies": {
+    "@ionic/storage": "^2.0.0"
   }
 }

@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import { SqlStorage } from './storage';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
 import { Request, Response, ResponseOptions } from '@angular/http';
@@ -9,6 +8,7 @@ import 'rxjs/add/observable/merge';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/share';
 import 'rxjs/add/operator/catch';
+import { Storage } from '@ionic/storage';
 
 export const MESSAGES = {
   0: 'Cache initialization error: ',
@@ -22,24 +22,28 @@ export const MESSAGES = {
 export class CacheService {
 
   private ttl: number = 60 * 60; // one hour
-  private tableName: string = 'cache';
-  private cacheKeys: string[] = ['key unique', 'value', 'expire INTEGER', 'type', 'groupKey'];
-  private storage: SqlStorage;
   private cacheEnabled: boolean = true;
   private invalidateOffline: boolean = false;
   private networkStatusChanges: Observable<boolean>;
   private networkStatus: boolean = true;
 
-  constructor() {
+  constructor(
+    private _storage: Storage
+  ) {
     try {
-      this.storage = new SqlStorage();
       this.watchNetworkInit();
-      this.initDatabase();
-      this.cacheEnabled = true;
+      _storage.ready()
+        .then(() => {
+          this.cacheEnabled = true;
+        });
     } catch (e) {
       this.cacheEnabled = false;
       console.error(MESSAGES[0], e);
     }
+  }
+
+  ready(): Promise<any> {
+    return this._storage.ready().then(() => Promise.resolve());
   }
 
   /**
@@ -50,22 +54,12 @@ export class CacheService {
   }
 
   /**
-   * @description Create DB table for cache, if not exists
-   * @return {Promise<any>}
-   */
-  private initDatabase(): Promise<any> {
-    let query = `CREATE TABLE IF NOT EXISTS ${this.tableName} (${this.cacheKeys.join(', ')})`;
-    return this.storage.query(query);
-  }
-
-  /**
    * @description Delete DB table and create new one
    * @return {Promise<any>}
    */
   private resetDatabase(): Promise<any> {
-    return this.storage.query(`DROP TABLE ${this.tableName}`).then(() => {
-      return this.initDatabase();
-    });
+    return this.ready()
+      .then(() => this._storage.clear());
   }
 
   /**
@@ -127,14 +121,16 @@ export class CacheService {
       return Promise.reject(MESSAGES[1]);
     }
 
-    const expire = new Date().getTime() + (ttl * 1000),
+    const expires = new Date().getTime() + (ttl * 1000),
       type = CacheService.isRequest(data) ? 'request' : typeof data,
-      value = JSON.stringify(data),
-      valuesMap = { key, value, expire, type, groupKey },
-      values = Object.keys(valuesMap).map(key => `${valuesMap[key]}`),
-      query = `INSERT OR REPLACE INTO ${this.tableName} (${Object.keys(valuesMap).join(', ')}) VALUES (${values.map(() => '?').join(', ')})`;
+      value = JSON.stringify(data);
 
-    return this.storage.query(query, values).then(() => data);
+    return this._storage.set(key, {
+      value,
+      expires,
+      type,
+      groupKey
+    });
   }
 
   /**
@@ -147,7 +143,7 @@ export class CacheService {
       return Promise.reject(MESSAGES[1]);
     }
 
-    return this.storage.query(`DELETE FROM ${this.tableName} WHERE key = '${key}'`);
+    return this._storage.remove(key);
   }
 
   /**
@@ -160,13 +156,12 @@ export class CacheService {
       return Promise.reject(MESSAGES[1]);
     }
 
-    let query = `SELECT * FROM ${this.tableName} WHERE key = '${key}'`;
-    return this.storage.query(query).then((data: SQLResultSet) => {
-      if (data.rows.length === 0 || !data.rows.item(0)) {
-        return Promise.reject(MESSAGES[3] + key);
-      }
-      return data.rows.item(0);
-    });
+    return this._storage.get(key)
+      .then(data => {
+        if (!data) return Promise.reject('');
+        return data;
+      })
+      .catch(() => Promise.reject(MESSAGES[3] + key));
   }
 
   /**
@@ -182,7 +177,7 @@ export class CacheService {
 
     return this.getRawItem(key).then(data => {
 
-      if (data.expire < new Date().getTime()) {
+      if (data.expires < new Date().getTime()) {
         if (this.invalidateOffline) {
           return Promise.reject(MESSAGES[2] + key);
         } else if (this.isOnline()) {
@@ -304,7 +299,12 @@ export class CacheService {
     }
 
     let datetime = new Date().getTime();
-    return this.storage.query(`DELETE FROM ${this.tableName} WHERE expire < ${datetime}`);
+    let promises: Promise<any>[] = [];
+    this._storage.forEach((key: string, val: any) => {
+      if (val.expires < datetime) promises.push(this.removeItem(key));
+    });
+
+    return Promise.all(promises);
   }
 
   /**
@@ -316,8 +316,11 @@ export class CacheService {
     if (!this.cacheEnabled) {
       return Promise.reject(MESSAGES[2]);
     }
-
-    return this.storage.query(`DELETE FROM ${this.tableName} WHERE groupKey = '${groupKey}'`);
+    let promises: Promise<any>[] = [];
+    this._storage.forEach((key: string, val: any) => {
+      if (val.groupKey === groupKey) promises.push(this.removeItem(key));
+    });
+    return Promise.all(promises);
   }
 
   /**
