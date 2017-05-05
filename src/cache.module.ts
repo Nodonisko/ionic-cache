@@ -9,6 +9,6 @@ export class CacheModule {
       providers: [
         CacheService
       ]
-    }
+    };
   }
 }

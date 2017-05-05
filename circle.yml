@@ -1,0 +1,24 @@
+version: 2
+jobs:
+  build:
+    working_directory: ~/ionic-cache/
+    docker:
+      - image: node:7
+    steps:
+      - checkout
+      - restore_cache:
+         key: node_modules_{{ checksum "package.json" }}
+      - run: npm install
+      - save_cache:
+         key: node_modules_{{ checksum "package.json" }}
+         paths:
+           - ~/ionic-cache/node_modules/
+      - run:
+         name: Lint
+         command: npm run lint
+      - run:
+         name: Test
+         command: npm test
+      - run:
+         name: Build
+         command: npm run build
