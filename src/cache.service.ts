@@ -10,7 +10,7 @@ import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/share';
 import 'rxjs/add/operator/catch';
 
-const MESSAGES = {
+export const MESSAGES = {
   0: 'Cache initialization error: ',
   1: 'Cache is not enabled.',
   2: 'Cache entry already expired: ',
@@ -25,7 +25,7 @@ export class CacheService {
   private tableName: string = 'cache';
   private cacheKeys: string[] = ['key unique', 'value', 'expire INTEGER', 'type', 'groupKey'];
   private storage: SqlStorage;
-  private enableCache: boolean = true;
+  private cacheEnabled: boolean = true;
   private invalidateOffline: boolean = false;
   private networkStatusChanges: Observable<boolean>;
   private networkStatus: boolean = true;
@@ -35,9 +35,9 @@ export class CacheService {
       this.storage = new SqlStorage();
       this.watchNetworkInit();
       this.initDatabase();
-      this.enableCache = true;
+      this.cacheEnabled = true;
     } catch (e) {
-      this.enableCache = false;
+      this.cacheEnabled = false;
       console.error(MESSAGES[0], e);
     }
   }
@@ -45,8 +45,8 @@ export class CacheService {
   /**
    * @description Disable or enable cache
    */
-  disableCache(status: boolean = true) {
-    this.enableCache = !status;
+  enableCache(enable: boolean = true) {
+    this.cacheEnabled = enable;
   }
 
   /**
@@ -123,7 +123,7 @@ export class CacheService {
    * @return {Promise<any>} - saved data
    */
   saveItem(key: string, data: any, groupKey: string = 'none', ttl: number = this.ttl): Promise<any> {
-    if (!this.enableCache) {
+    if (!this.cacheEnabled) {
       return Promise.reject(MESSAGES[1]);
     }
 
@@ -143,7 +143,7 @@ export class CacheService {
    * @return {Promise<any>} - query execution promise
    */
   removeItem(key: string): Promise<any> {
-    if (!this.enableCache) {
+    if (!this.cacheEnabled) {
       return Promise.reject(MESSAGES[1]);
     }
 
@@ -156,7 +156,7 @@ export class CacheService {
    * @return {Promise<any>} - data from cache
    */
   getRawItem(key: string): Promise<any> {
-    if (!this.enableCache) {
+    if (!this.cacheEnabled) {
       return Promise.reject(MESSAGES[1]);
     }
 
@@ -175,7 +175,7 @@ export class CacheService {
    * @return {Promise<any>} - data from cache
    */
   getItem(key: string): Promise<any> {
-    if (!this.enableCache) {
+    if (!this.cacheEnabled) {
       return Promise.reject(MESSAGES[1]);
     }
 
@@ -223,7 +223,7 @@ export class CacheService {
    * @return {Observable<any>} - data from cache or origin observable
    */
   loadFromObservable(key: string, observable: any, groupKey?: string, ttl?: number): Observable<any> {
-    if (!this.enableCache) return observable;
+    if (!this.cacheEnabled) return observable;
 
     observable = observable.share();
 
@@ -244,7 +244,7 @@ export class CacheService {
    * @return {Observable<any>} - data from cache or origin observable
    */
   loadFromDelayedObservable(key: string, observable: any, groupKey?: string, ttl: number = this.ttl, delayType: string = 'expired'): Observable<any> {
-    if (!this.enableCache) return observable;
+    if (!this.cacheEnabled) return observable;
 
     const observableSubject = new Subject();
     observable = observable.share();
@@ -282,7 +282,7 @@ export class CacheService {
    * @return {Promise<any>}
    */
   clearAll(): Promise<any> {
-    if (!this.enableCache) {
+    if (!this.cacheEnabled) {
       return Promise.reject(MESSAGES[2]);
     }
 
@@ -295,7 +295,7 @@ export class CacheService {
    * @return {Promise<any>} - query promise
    */
   clearExpired(ignoreOnlineStatus = false): Promise<any> {
-    if (!this.enableCache) {
+    if (!this.cacheEnabled) {
       return Promise.reject(MESSAGES[2]);
     }
 
@@ -313,7 +313,7 @@ export class CacheService {
    * @return {Promise<any>} - query promise
    */
   clearGroup(groupKey: string): Promise<any> {
-    if (!this.enableCache) {
+    if (!this.cacheEnabled) {
       return Promise.reject(MESSAGES[2]);
     }
 
