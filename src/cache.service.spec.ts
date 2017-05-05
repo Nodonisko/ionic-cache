@@ -24,7 +24,7 @@ describe('CacheService', () => {
       name: '__ionicCache',
       driverOrder: ['indexeddb', 'sqlite', 'websql']
     }));
-    service.ready().then(() =>{
+    service.ready().then(() => {
       service.enableCache(true);
       done();
     });
