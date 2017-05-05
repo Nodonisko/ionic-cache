@@ -171,19 +171,9 @@ export class CacheService {
    */
   getItem(key: string): Promise<any> {
 
-    let nothingFound: boolean;
-
     if (!this.cacheEnabled) {
-      console.info('Cache disabled, cant return stuff');
-      nothingFound = true;
       return Promise.reject(MESSAGES[1]);
     }
-
-    if (nothingFound) {
-      console.info('Im not supposed to run but for some reason im running');
-    }
-
-    console.info('Returning data for ' + key);
 
     return this.getRawItem(key).then(data => {
 
