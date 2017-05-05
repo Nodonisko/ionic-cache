@@ -26,6 +26,11 @@ Via NPM:
 npm install ionic-cache --save
 ```
 
+or Yarn:
+```bash
+yarn add ionic-cache
+```
+
 And inject service to your app:
 
 *app.module.ts*
