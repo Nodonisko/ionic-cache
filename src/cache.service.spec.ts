@@ -11,6 +11,8 @@ import { TestBed } from '@angular/core/testing';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/of';
+import 'rxjs/add/observable/throw';
+import 'rxjs/add/operator/count';
 import { Storage } from '@ionic/storage';
 
 TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting());
@@ -18,7 +20,7 @@ TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicT
 describe('CacheService', () => {
 
   let service: CacheService;
-  const ttl = 1;
+  const ttl = 0.2;
   const key = 'https://github.com/Nodonisko/ionic-cache';
   const groupKey = 'fooGroup';
   const cacheValue = 'ibby';
@@ -108,7 +110,8 @@ describe('Observable Caching', () => {
   const key: string = 'http_cache_test';
 
   let mockData: any = {
-    hello: 'world'
+    hello: 'Hello world"s ',
+    world: "It's beautiful day"
   };
 
   let observable = Observable.of(mockData);
@@ -156,6 +159,231 @@ describe('Observable Caching', () => {
           expect(res).toEqual(mockData);
           done();
         });
+  });
+
+  afterAll(done => {
+    service.clearAll()
+      .then(done)
+      .catch(done);
+  });
+
+});
+
+
+describe('Observable caching errors', () => {
+
+  const key: string = 'http_cache_error_test';
+
+  let mockData: any = {
+    hello: 'Hello world"s ',
+    world: "It's beautiful day"
+  };
+
+  let observableError = Observable.throw(mockData);
+
+  let service: CacheService;
+
+  beforeAll(done => {
+    service = new CacheService(new Storage({
+      name: '__ionicCache',
+      driverOrder: ['indexeddb', 'sqlite', 'websql']
+    }));
+    service.ready().then(done);
+  });
+
+  beforeEach(() => {
+    spyOn(observableError, 'subscribe').and.callThrough();
+  });
+
+  it('should create an instance of the service', () => {
+    expect(service).toBeDefined();
+  });
+
+  it('should return data from observable (async)', (done: any) => {
+    service.loadFromObservable(key, observableError)
+      .subscribe(
+        res => {
+          expect(true).toBeFalsy();
+          done();
+        },
+        err => {
+          expect(err).toBeDefined();
+          done(err);
+        }
+      );
+  });
+
+  afterAll(done => {
+    service.clearAll()
+      .then(done)
+      .catch(done);
+  });
+
+});
+
+describe('Delayed observable caching', () => {
+  const ttl = 1;
+  const key = 'https://github.com/Nodonisko/ionic-cache';
+  const groupKey = 'fooGroup';
+  const mockData: any = {
+    hello: 'Hello world'
+  };
+  const mockData2: any = {
+    hello: 'Hello world again'
+  };
+
+  const observable = Observable.of(mockData);
+  const observable2 = Observable.of(mockData2);
+
+  let service: CacheService;
+
+  beforeAll(done => {
+    service = new CacheService(new Storage({
+      name: '__ionicCache',
+      driverOrder: ['indexeddb', 'sqlite', 'websql']
+    }));
+    service.ready().then(done);
+  });
+
+  beforeEach(() => {
+    spyOn(observable, 'subscribe').and.callThrough();
+    spyOn(observable2, 'subscribe').and.callThrough();
+  });
+
+  it('should create an instance of the service', () => {
+    expect(service).toBeDefined();
+  });
+
+  it('should return data from observable (async)', (done: any) => {
+    service.loadFromDelayedObservable(key, observable, groupKey, ttl)
+      .subscribe(
+        res => {
+          expect(res).toBeDefined();
+          expect(observable.subscribe).toHaveBeenCalled();
+          expect(res).toEqual(mockData);
+          done();
+        },
+        err => {
+          done(err);
+        }
+      );
+  });
+
+  it('should return cached observable data if is NOT expired (async)', done => {
+      service.loadFromDelayedObservable(key, observable2, groupKey, ttl)
+        .subscribe(res => {
+          expect(observable2.subscribe).not.toHaveBeenCalled();
+          expect(res).toEqual(mockData);
+          done();
+        });
+  });
+
+  it('should return 2 responses (cache, server) if is NOT exprired and delayType is all (async)', done => {
+      service.loadFromDelayedObservable(key, observable2, groupKey, ttl, 'all')
+        .count(() => true)
+        .subscribe(count => {
+          expect(observable2.subscribe).toHaveBeenCalled();
+          expect(count).toEqual(2);
+          done();
+        }, done, done);
+  });
+
+  it('should return 2 responses (cache, server) if is NOT exprired and delayType is all (async)', done => {
+      service.loadFromDelayedObservable(key, observable2, groupKey, ttl, 'all')
+        .subscribe(res => {
+          expect(res).toEqual(mockData2);
+          done();
+        }, done, done);
+  });
+
+
+  afterAll(done => {
+    service.clearAll()
+      .then(done)
+      .catch(done);
+  });
+
+});
+
+
+describe('Delayed observable caching error', () => {
+  const ttl = 1;
+  const key = 'https://github.com/Nodonisko/ionic-cache';
+  const groupKey = 'fooGroup';
+  const mockData: any = {
+    hello: 'Hello world'
+  };
+  const mockData2: any = {
+    hello: 'Hello world again'
+  };
+
+  const observable = Observable.of(mockData);
+  const observable2 = Observable.of(mockData2);
+  const observableError = Observable.throw(mockData);
+
+  let service: CacheService;
+
+  beforeAll(done => {
+    service = new CacheService(new Storage({
+      name: '__ionicCache',
+      driverOrder: ['indexeddb', 'sqlite', 'websql']
+    }));
+    service.ready().then(done);
+  });
+
+  beforeEach(() => {
+    spyOn(observable, 'subscribe').and.callThrough();
+    spyOn(observable2, 'subscribe').and.callThrough();
+  });
+
+  it('should create an instance of the service', () => {
+    expect(service).toBeDefined();
+  });
+
+  it('should return error from observable (async)', (done: any) => {
+    service.loadFromDelayedObservable(key, observableError, groupKey, ttl)
+      .subscribe(
+        res => {
+          expect(true).toBeFalsy();
+          done();
+        },
+        err => {
+          expect(err).toBeDefined();
+          expect(err).toEqual(mockData);
+          done(err);
+        },
+        done
+      );
+  });
+
+  it('should return data from observable (async)', (done: any) => {
+    service.loadFromDelayedObservable(key, observable, groupKey, ttl)
+      .subscribe(
+        res => {
+          expect(res).toBeDefined();
+          expect(observable.subscribe).toHaveBeenCalled();
+          expect(res).toEqual(mockData);
+          done();
+        },
+        err => {
+          done(err);
+        }
+      );
+  });
+
+  it('should return one reponse and one error from observable (async)', (done: any) => {
+    service.loadFromDelayedObservable(key, observableError, groupKey, ttl, 'all')
+      .subscribe(
+        res => {
+          expect(res).toEqual(mockData);
+        },
+        err => {
+          expect(err).toBeDefined();
+          expect(err).toEqual(mockData);
+          done(err);
+        },
+        done
+      );
   });
 
   afterAll(done => {
