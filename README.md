@@ -237,7 +237,7 @@ You can disable cache without any worrying, it will pass origin Observable throu
 Without any errors.
 
 ```js
-this.cache.disableCache(true);
+this.cache.enableCache(false);
 ```
 
 #### Disable offline invalidate
