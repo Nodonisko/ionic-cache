@@ -111,7 +111,7 @@ describe('Observable Caching', () => {
 
   let mockData: any = {
     hello: 'Hello world"s ',
-    world: "It's beautiful day"
+    world: "It's beautiful day" // tslint:disable-line
   };
 
   let observable = Observable.of(mockData);
@@ -176,7 +176,7 @@ describe('Observable caching errors', () => {
 
   let mockData: any = {
     hello: 'Hello world"s ',
-    world: "It's beautiful day"
+    world: "It's beautiful day" // tslint:disable-line
   };
 
   let observableError = Observable.throw(mockData);

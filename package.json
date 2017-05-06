@@ -1,6 +1,6 @@
 {
   "name": "ionic-cache",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Ionic cache service - cache request, data, promises etc.",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -12,7 +12,8 @@
     "test": "karma start karma.conf.js --single-run",
     "test:watch": "karma start karma.conf.js",
     "build": "rm -rf dist aot && ngc",
-    "lint": "tslint \"src/**/*.ts\""
+    "lint": "tslint \"src/**/*.ts\"",
+    "prepublish": "npm run lint && npm run build"
   },
   "repository": {
     "type": "git",
