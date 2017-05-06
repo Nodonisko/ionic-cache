@@ -248,7 +248,12 @@ export class CacheService {
       observable.subscribe(res => {
         this.saveItem(key, res, groupKey, ttl);
         observableSubject.next(res);
-      }, null, () => {
+        observableSubject.complete();
+      },
+      (err) => {
+        observableSubject.error(err);
+      },
+      () => {
         observableSubject.complete();
       });
     };
