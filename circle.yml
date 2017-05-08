@@ -7,18 +7,18 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-         key: node_modules_{{ checksum "package.json" }}
-      - run: npm install
+         key: node_modules_{{ checksum "yarn.lock" }}
+      - run: yarn
       - save_cache:
-         key: node_modules_{{ checksum "package.json" }}
+         key: node_modules_{{ checksum "yarn.lock" }}
          paths:
            - ~/ionic-cache/node_modules/
       - run:
          name: Lint
-         command: npm run lint
+         command: yarn run lint
       - run:
          name: Test
-         command: npm test
+         command: yarn test
       - run:
          name: Build
-         command: npm run build
+         command: yarn run build
