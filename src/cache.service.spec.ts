@@ -20,7 +20,7 @@ TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicT
 describe('CacheService', () => {
 
   let service: CacheService;
-  const ttl = 0.2;
+  const ttl = 0.4;
   const key = 'https://github.com/Nodonisko/ionic-cache';
   const groupKey = 'fooGroup';
   const cacheValue = 'ibby';
