@@ -2,41 +2,41 @@
 # yarn lockfile v1
 
 
-"@angular/common@^4.1.1":
-  version "4.1.1"
-  resolved "https://registry.yarnpkg.com/@angular/common/-/common-4.1.1.tgz#088a13a70c5390c5c9613aa05754b74ee18e1afb"
+"@angular/common@^4.1.3":
+  version "4.1.3"
+  resolved "https://registry.yarnpkg.com/@angular/common/-/common-4.1.3.tgz#e7c4791e32131cf74c239428c2a67daab2eef017"
 
-"@angular/compiler-cli@^4.1.1":
-  version "4.1.1"
-  resolved "https://registry.yarnpkg.com/@angular/compiler-cli/-/compiler-cli-4.1.1.tgz#8cea89ee12129c3f0edb55853e18b37b164f2953"
+"@angular/compiler-cli@^4.1.3":
+  version "4.1.3"
+  resolved "https://registry.yarnpkg.com/@angular/compiler-cli/-/compiler-cli-4.1.3.tgz#c2362ffdf65756471481f839fab675bcac213f96"
   dependencies:
-    "@angular/tsc-wrapped" "4.1.1"
+    "@angular/tsc-wrapped" "4.1.3"
     minimist "^1.2.0"
     reflect-metadata "^0.1.2"
 
-"@angular/compiler@^4.1.1":
-  version "4.1.1"
-  resolved "https://registry.yarnpkg.com/@angular/compiler/-/compiler-4.1.1.tgz#fc62459056465f624c3ac6f68dadcc9ba74c4ae0"
+"@angular/compiler@^4.1.3":
+  version "4.1.3"
+  resolved "https://registry.yarnpkg.com/@angular/compiler/-/compiler-4.1.3.tgz#d2dd30853b0cf4a54758b4a314632c231f9c94c3"
 
-"@angular/core@^4.1.1":
-  version "4.1.1"
-  resolved "https://registry.yarnpkg.com/@angular/core/-/core-4.1.1.tgz#1230645c842f8a6a050403d4947f982e7ef70c60"
+"@angular/core@^4.1.3":
+  version "4.1.3"
+  resolved "https://registry.yarnpkg.com/@angular/core/-/core-4.1.3.tgz#285498eb86ab7d0b6f982f8f9f487ef610013b35"
 
-"@angular/http@^4.1.1":
-  version "4.1.1"
-  resolved "https://registry.yarnpkg.com/@angular/http/-/http-4.1.1.tgz#1e052d02e52aee7b48d1de626abbf067e850a242"
+"@angular/http@^4.1.3":
+  version "4.1.3"
+  resolved "https://registry.yarnpkg.com/@angular/http/-/http-4.1.3.tgz#eb9d1c302a0172815f9a573310d9be0bdeb845ae"
 
-"@angular/platform-browser-dynamic@^4.1.1":
-  version "4.1.1"
-  resolved "https://registry.yarnpkg.com/@angular/platform-browser-dynamic/-/platform-browser-dynamic-4.1.1.tgz#682881035140e22d498abca139907aa8187f6bfa"
+"@angular/platform-browser-dynamic@^4.1.3":
+  version "4.1.3"
+  resolved "https://registry.yarnpkg.com/@angular/platform-browser-dynamic/-/platform-browser-dynamic-4.1.3.tgz#3c13fdcf591d487f6efdc1d46913f280c6d8c2ec"
 
-"@angular/platform-browser@^4.1.1":
-  version "4.1.1"
-  resolved "https://registry.yarnpkg.com/@angular/platform-browser/-/platform-browser-4.1.1.tgz#e2f545b458e7858cc0b20b0ae4cc99237560fb72"
+"@angular/platform-browser@^4.1.3":
+  version "4.1.3"
+  resolved "https://registry.yarnpkg.com/@angular/platform-browser/-/platform-browser-4.1.3.tgz#4fa1db5119dd178b315ddae5b329bee1a932a5bd"
 
-"@angular/tsc-wrapped@4.1.1":
-  version "4.1.1"
-  resolved "https://registry.yarnpkg.com/@angular/tsc-wrapped/-/tsc-wrapped-4.1.1.tgz#ade793cdbe64c650c5f5946ff424c6a3577b09d8"
+"@angular/tsc-wrapped@4.1.3":
+  version "4.1.3"
+  resolved "https://registry.yarnpkg.com/@angular/tsc-wrapped/-/tsc-wrapped-4.1.3.tgz#2d6372c9187bf1621eacd960b94b39c4f95293cd"
   dependencies:
     tsickle "^0.21.0"
 
@@ -1102,15 +1102,9 @@ debug@2.6.1:
   dependencies:
     ms "0.7.2"
 
-debug@2.6.3, debug@^2.1.1:
+debug@2.6.3, debug@^2.1.1, debug@^2.2.0:
   version "2.6.3"
   resolved "https://registry.yarnpkg.com/debug/-/debug-2.6.3.tgz#0f7eb8c30965ec08c72accfa0130c8b79984141d"
-  dependencies:
-    ms "0.7.2"
-
-debug@^2.2.0:
-  version "2.6.0"
-  resolved "https://registry.yarnpkg.com/debug/-/debug-2.6.0.tgz#bc596bcabe7617f11d9fa15361eded5608b8499b"
   dependencies:
     ms "0.7.2"
 
@@ -2173,6 +2167,56 @@ karma-typescript@^3.0.1:
     util "~0.10.1"
     vm-browserify "~0.0.1"
 
+"karma-typescript@github:monounity/karma-typescript#next":
+  version "3.0.2"
+  resolved "https://codeload.github.com/monounity/karma-typescript/tar.gz/ce05018c54f4ce978f69131eb4271ed6ed84df3b"
+  dependencies:
+    acorn "^4.0.4"
+    amdefine "1.0.0"
+    assert "~1.3.0"
+    async "^2.1.4"
+    base64-js "^1.0.2"
+    browser-resolve "^1.11.0"
+    browserify-zlib "~0.1.2"
+    buffer "^4.1.0"
+    console-browserify "^1.1.0"
+    constants-browserify "~1.0.0"
+    crypto-browserify "^3.0.0"
+    diff "^3.2.0"
+    domain-browser "~1.1.0"
+    es6-promise "^4.0.5"
+    events "~1.1.0"
+    glob "^7.1.1"
+    gulp-util "3.0.7"
+    https-browserify "~0.0.0"
+    ieee754 "^1.1.4"
+    isarray "^1.0.0"
+    istanbul "0.4.5"
+    karma-coverage "^1.1.1"
+    lodash "^4.17.4"
+    log4js "^1.1.1"
+    magic-string "^0.19.0"
+    minimatch "^3.0.3"
+    os-browserify "~0.1.1"
+    pad "^1.1.0"
+    path-browserify "~0.0.0"
+    process "~0.11.0"
+    punycode "^1.3.2"
+    querystring-es3 "~0.2.0"
+    readable-stream "^2.0.2"
+    remap-istanbul "^0.8.4"
+    source-map ">=0.5.6"
+    stream-browserify "^2.0.0"
+    stream-http "^2.0.0"
+    string_decoder "~0.10.0"
+    through2 "2.0.1"
+    timers-browserify "^1.0.1"
+    tmp "0.0.29"
+    tty-browserify "~0.0.0"
+    url "~0.11.0"
+    util "~0.10.1"
+    vm-browserify "~0.0.1"
+
 karma@^1.6.0:
   version "1.6.0"
   resolved "https://registry.yarnpkg.com/karma/-/karma-1.6.0.tgz#0e871d4527d5eac56c41d181f03c5c0a7e6dbf3e"
@@ -3131,9 +3175,9 @@ ripemd160@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/ripemd160/-/ripemd160-1.0.1.tgz#93a4bbd4942bc574b69a8fa57c71de10ecca7d6e"
 
-rxjs@^5.3.1:
-  version "5.3.1"
-  resolved "https://registry.yarnpkg.com/rxjs/-/rxjs-5.3.1.tgz#9ecc9e722247e4f4490d30a878577a3740fd0cb7"
+rxjs@^5.4.0:
+  version "5.4.0"
+  resolved "https://registry.yarnpkg.com/rxjs/-/rxjs-5.4.0.tgz#a7db14ab157f9d7aac6a56e655e7a3860d39bf26"
   dependencies:
     symbol-observable "^1.0.1"
 
@@ -3485,9 +3529,9 @@ tslint-eslint-rules@^1.3.0:
     doctrine "^0.7.2"
     tslint "^3.15.1"
 
-tslint-ionic-rules@^0.0.7:
-  version "0.0.7"
-  resolved "https://registry.yarnpkg.com/tslint-ionic-rules/-/tslint-ionic-rules-0.0.7.tgz#5d249b66d21a9a8b5c3b41c78e0917f78ad83edc"
+tslint-ionic-rules@^0.0.8:
+  version "0.0.8"
+  resolved "https://registry.yarnpkg.com/tslint-ionic-rules/-/tslint-ionic-rules-0.0.8.tgz#6aed6f8e3cd406523301d1d6d036f7f036dd2809"
   dependencies:
     tslint-eslint-rules "^1.3.0"
 
@@ -3538,9 +3582,9 @@ typedarray@~0.0.5:
   version "0.0.6"
   resolved "https://registry.yarnpkg.com/typedarray/-/typedarray-0.0.6.tgz#867ac74e3864187b1d3d47d996a78ec5c8830777"
 
-typescript@^2.3.2:
-  version "2.3.2"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-2.3.2.tgz#f0f045e196f69a72f06b25fd3bd39d01c3ce9984"
+typescript@^2.3.4:
+  version "2.3.4"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-2.3.4.tgz#3d38321828231e434f287514959c37a82b629f42"
 
 uglify-js@^2.6:
   version "2.8.22"
@@ -3719,6 +3763,6 @@ yeast@0.1.2:
   version "0.1.2"
   resolved "https://registry.yarnpkg.com/yeast/-/yeast-0.1.2.tgz#008e06d8094320c372dbc2f8ed76a0ca6c8ac419"
 
-zone.js@^0.8.10:
-  version "0.8.10"
-  resolved "https://registry.yarnpkg.com/zone.js/-/zone.js-0.8.10.tgz#6d1b696492c029cdbe808e59e87bbd9491b98aa8"
+zone.js@^0.8.11:
+  version "0.8.11"
+  resolved "https://registry.yarnpkg.com/zone.js/-/zone.js-0.8.11.tgz#742befb17fbc49a571712b8c7d87e58ca26fd886"
