@@ -305,7 +305,7 @@ export class CacheService {
 
     let datetime = new Date().getTime();
     let promises: Promise<any>[] = [];
-    this._storage.forEach((key: string, val: any) => {
+    this._storage.forEach((val: any, key: string) => {
       if (val.expires < datetime) promises.push(this.removeItem(key));
     });
 
@@ -322,7 +322,7 @@ export class CacheService {
       return Promise.reject(MESSAGES[2]);
     }
     let promises: Promise<any>[] = [];
-    this._storage.forEach((key: string, val: any) => {
+    this._storage.forEach((val: any, key: string) => {
       if (val.groupKey === groupKey) promises.push(this.removeItem(key));
     });
     return Promise.all(promises);
