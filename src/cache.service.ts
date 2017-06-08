@@ -224,7 +224,10 @@ export class CacheService {
     observable = observable.share();
     return Observable.fromPromise(this.getItem(key))
       .catch((e) => {
-        observable.subscribe(res => this.saveItem(key, res, groupKey, ttl));
+        observable.subscribe(
+          res => this.saveItem(key, res, groupKey, ttl),
+          error => Observable.throw(error)
+        );
         return observable;
       });
   }
