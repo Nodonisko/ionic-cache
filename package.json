@@ -1,6 +1,6 @@
 {
   "name": "ionic-cache",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "Ionic cache service - cache request, data, promises etc.",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
