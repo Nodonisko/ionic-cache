@@ -8,6 +8,7 @@ import 'rxjs/add/observable/merge';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/share';
 import 'rxjs/add/operator/catch';
+import 'rxjs/add/observable/throw';
 import { Storage } from '@ionic/storage';
 
 export const MESSAGES = {
@@ -309,7 +310,7 @@ export class CacheService {
     let datetime = new Date().getTime();
     let promises: Promise<any>[] = [];
     this._storage.forEach((val: any, key: string) => {
-      if (val.expires < datetime) promises.push(this.removeItem(key));
+      if (val && val.expires < datetime) promises.push(this.removeItem(key));
     });
 
     return Promise.all(promises);
@@ -326,7 +327,7 @@ export class CacheService {
     }
     let promises: Promise<any>[] = [];
     this._storage.forEach((val: any, key: string) => {
-      if (val.groupKey === groupKey) promises.push(this.removeItem(key));
+      if (val && val.groupKey === groupKey) promises.push(this.removeItem(key));
     });
     return Promise.all(promises);
   }
