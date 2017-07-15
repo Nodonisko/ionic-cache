@@ -321,12 +321,12 @@ export class CacheService {
    * @param {string} groupKey - group key
    * @return {Promise<any>} - query promise
    */
-  clearGroup(groupKey: string): Promise<any> {
+  async clearGroup(groupKey: string): Promise<any> {
     if (!this.cacheEnabled) {
       return Promise.reject(MESSAGES[2]);
     }
     let promises: Promise<any>[] = [];
-    this._storage.forEach((val: any, key: string) => {
+    await this._storage.forEach((val: any, key: string) => {
       if (val && val.groupKey === groupKey) promises.push(this.removeItem(key));
     });
     return Promise.all(promises);
