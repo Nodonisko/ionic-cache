@@ -19,6 +19,8 @@ export const MESSAGES = {
   4: 'No entries were deleted, because browser is offline.'
 };
 
+export type CacheValueFactory<T> = () => Promise<T>;
+
 @Injectable()
 export class CacheService {
 
@@ -188,6 +190,19 @@ export class CacheService {
 
       return CacheService.decodeRawData(data);
     });
+  }
+
+  async getOrSetItem<T>(key: string, factory: CacheValueFactory<T>, groupKey: string = 'none', ttl: number = this.ttl): Promise<T> {
+    let val: T;
+
+    try {
+      val = await this.getItem(key);
+    } catch (error) {
+      val = await factory();
+      await this.saveItem(key, val);
+    }
+
+    return val;
   }
 
   /**
