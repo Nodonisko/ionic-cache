@@ -60,5 +60,8 @@
   },
   "peerDependencies": {
     "@ionic/storage": "^2.0.1"
+  },
+  "dependencies": {
+    "crypto-js": "^3.1.9-1"
   }
 }

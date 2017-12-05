@@ -10,6 +10,7 @@ import 'rxjs/add/operator/share';
 import 'rxjs/add/operator/catch';
 import 'rxjs/add/observable/throw';
 import { Storage } from '@ionic/storage';
+import * as CryptoJS from 'crypto-js';
 
 export const MESSAGES = {
   0: 'Cache initialization error: ',
@@ -29,6 +30,7 @@ export class CacheService {
   private invalidateOffline: boolean = false;
   private networkStatusChanges: Observable<boolean>;
   private networkStatus: boolean = true;
+  private encryptionKey: string;
 
   constructor(
     private _storage: Storage
@@ -72,6 +74,15 @@ export class CacheService {
   setDefaultTTL(ttl: number): number {
     return this.ttl = ttl;
   }
+
+  /**
+     * @description Set AES encryption key
+     * @author Prasad Sambodhi (nisostech.com)
+     * @param {string} key encryption key
+     */
+    setEncryptionKey(key: string) {
+      this.encryptionKey = key;
+    }
 
   /**
    * @description Set if expired cache should be invalidated if device is offline
@@ -126,7 +137,8 @@ export class CacheService {
 
     const expires = new Date().getTime() + (ttl * 1000),
       type = CacheService.isRequest(data) ? 'request' : typeof data,
-      value = JSON.stringify(data);
+      // value = JSON.stringify(data);
+      value = this.encryptionKey ? CryptoJS.AES.encrypt(JSON.stringify(data), this.encryptionKey).toString() : JSON.stringify(data);
 
     return this._storage.set(key, {
       value,
@@ -188,7 +200,7 @@ export class CacheService {
         }
       }
 
-      return CacheService.decodeRawData(data);
+      return CacheService.decodeRawData(data, this.encryptionKey);
     });
   }
 
@@ -210,8 +222,9 @@ export class CacheService {
    * @param {any} data - Data
    * @return {any} - decoded data
    */
-  static decodeRawData(data: any): any {
-    let dataJson = JSON.parse(data.value);
+  static decodeRawData(data: any, encryptionKey?: string): any {
+    // let dataJson = JSON.parse(data.value);
+    let dataJson = JSON.parse( encryptionKey ? CryptoJS.AES.decrypt(data.value, encryptionKey).toString(CryptoJS.enc.Utf8) : data.value);
     if (CacheService.isRequest(dataJson)) {
       const requestOptions = new ResponseOptions({
         body: dataJson._body,
@@ -287,7 +300,7 @@ export class CacheService {
       .catch((e) => {
         this.getRawItem(key)
           .then(res => {
-            observableSubject.next(CacheService.decodeRawData(res));
+            observableSubject.next(CacheService.decodeRawData(res, this.encryptionKey));
             subscribeOrigin();
           })
           .catch(() => subscribeOrigin());
