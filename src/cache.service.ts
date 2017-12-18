@@ -167,6 +167,21 @@ export class CacheService {
       .catch(() => Promise.reject(MESSAGES[3] + key));
   }
 
+   /**
+   * @description Check if item exists in cache
+   * @param {string} key - Unique key
+   * @return {Promise<any>} - boolean - true if exists
+   */
+  itemExists(key: string): Promise<boolean> {    
+    if (!this.cacheEnabled) {
+      return Promise.reject(MESSAGES[1]);
+    }
+
+    this._storage.keys().then((any:[string])=>{
+      return any.indexOf(key)>-1;
+    });
+  }
+
   /**
    * @description Get item from cache with expire check and correct type assign
    * @param {string} key - Unique key
