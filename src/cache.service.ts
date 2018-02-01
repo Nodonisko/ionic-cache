@@ -59,7 +59,7 @@ export class CacheService {
     // try load @angular/http deprecated or @angular/common/http
     try {
       http = await import('@angular/http');
-      CacheService.httpDeprecated = true
+      CacheService.httpDeprecated = true;
     } catch (e) {
       http = await import('@angular/common/http');
     }
