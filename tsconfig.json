@@ -1,12 +1,13 @@
 {
   "compilerOptions": {
-    "module": "es2015",
+    "module": "esnext",
     "target": "es5",
     "moduleResolution": "node",
     "sourceMap": true,
     "inlineSources": true,
     "declaration": true,
     "noImplicitAny": false,
+    "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "lib": [
       "dom",
@@ -14,12 +15,15 @@
     ],
     "outDir": "dist"
   },
+  "include": [
+    "src/index.ts"
+  ],
   "exclude": [
-    "node_modules",
-    "dist",
-    "src/**/*.spec.ts"
+    "node_modules"
   ],
   "angularCompilerOptions": {
-    "genDir": "aot"
+    "strictMetadataEmit": false,
+    "skipTemplateCodegen": true,
+    "debug": false
   }
 }
