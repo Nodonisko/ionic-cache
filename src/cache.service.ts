@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
+import 'rxjs/add/operator/filter';
 import 'rxjs/add/observable/fromPromise';
 import 'rxjs/add/observable/fromEvent';
 import 'rxjs/add/observable/merge';
@@ -268,7 +269,9 @@ export class CacheService {
     observable = observable.share();
     return Observable.fromPromise(this.getItem(key))
       .catch((e) => {
-        observable.subscribe(
+        observable
+        .filter((response: any) => response instanceof CacheService.response)
+        .subscribe(
           res => this.saveItem(key, res, groupKey, ttl),
           error => Observable.throw(error)
         );
