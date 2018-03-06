@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
-import { Request, Response, ResponseOptions } from '@angular/http';
+import 'rxjs/add/operator/filter';
 import 'rxjs/add/observable/fromPromise';
 import 'rxjs/add/observable/fromEvent';
 import 'rxjs/add/observable/merge';
@@ -28,8 +28,16 @@ export class CacheService {
   private invalidateOffline: boolean = false;
   private networkStatusChanges: Observable<boolean>;
   private networkStatus: boolean = true;
+  static request: any;
+  static response: any;
+  static responseOptions: any;
+  static httpDeprecated: boolean = false;
 
-  constructor(private _storage: Storage) {
+  constructor(
+    private _storage: Storage
+  ) {
+    this.loadHttp();
+
     try {
       this.watchNetworkInit();
       _storage.ready().then(() => {
@@ -39,6 +47,24 @@ export class CacheService {
       this.cacheEnabled = false;
       console.error(MESSAGES[0], e);
     }
+  }
+
+  private async loadHttp() {
+    if (CacheService.request && CacheService.response) {
+      return;
+    }
+
+    let http;
+    // try load @angular/http deprecated or @angular/common/http
+    try {
+      http = await import('@angular/http');
+      CacheService.httpDeprecated = true;
+    } catch (e) {
+      http = await import('@angular/common/http');
+    }
+    CacheService.request         = http.Request || http.HttpRequest;
+    CacheService.response        = http.Response || http.HttpResponse;
+    CacheService.responseOptions = http.ResponseOptions;
   }
 
   ready(): Promise<any> {
@@ -232,15 +258,20 @@ export class CacheService {
   static decodeRawData(data: any): any {
     let dataJson = JSON.parse(data.value);
     if (CacheService.isRequest(dataJson)) {
-      const requestOptions = new ResponseOptions({
-        body: dataJson._body,
+      let response: any = {
+        body: dataJson._body || dataJson.body,
         status: dataJson.status,
         headers: dataJson.headers,
         statusText: dataJson.statusText,
-        type: dataJson.type,
         url: dataJson.url
-      });
-      return new Response(requestOptions);
+      };
+
+      if (CacheService.responseOptions) {
+        response.type = dataJson.type;
+        response = new CacheService.responseOptions(response);
+      }
+
+      return new CacheService.response(response);
     } else {
       return dataJson;
     }
@@ -262,13 +293,16 @@ export class CacheService {
   ): Observable<any> {
     if (!this.cacheEnabled) return observable;
     observable = observable.share();
-    return Observable.fromPromise(this.getItem(key)).catch(e => {
-      observable.subscribe(
-        res => this.saveItem(key, res, groupKey, ttl),
-        error => Observable.throw(error)
-      );
-      return observable;
-    });
+    return Observable.fromPromise(this.getItem(key))
+      .catch((e) => {
+        observable
+        .filter((response: any) => response instanceof CacheService.response)
+        .subscribe(
+          res => this.saveItem(key, res, groupKey, ttl),
+          error => Observable.throw(error)
+        );
+        return observable;
+      });
   }
 
   /**
@@ -384,16 +418,22 @@ export class CacheService {
    * @return {boolean} - data from cache
    */
   static isRequest(data: any): boolean {
+
+    let orCondition = (
+      typeof data === 'object' && data.hasOwnProperty('status') &&
+      data.hasOwnProperty('statusText') &&
+      data.hasOwnProperty('headers') &&
+      data.hasOwnProperty('url')
+    );
+
+    if (CacheService.httpDeprecated) {
+      orCondition = (orCondition && data.hasOwnProperty('type') && data.hasOwnProperty('_body'));
+    } else {
+      orCondition = (orCondition && data.hasOwnProperty('body'));
+    }
+
     return (
-      data &&
-      (data instanceof Request ||
-        (typeof data === 'object' &&
-          data.hasOwnProperty('_body') &&
-          data.hasOwnProperty('status') &&
-          data.hasOwnProperty('statusText') &&
-          data.hasOwnProperty('type') &&
-          data.hasOwnProperty('headers') &&
-          data.hasOwnProperty('url')))
+      data && (data instanceof CacheService.request || orCondition)
     );
   }
 }
