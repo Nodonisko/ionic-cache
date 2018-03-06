@@ -239,8 +239,6 @@ describe('Observable Caching', () => {
     expect(service).toBeDefined();
   });
 
-  // it('', inject([XHRBackend, CacheService], (mockBackend: XHRBackend, cache: CacheService) => { }))
-
   it('should return data from observable (async)', (done: any) => {
     service.loadFromObservable(key, observable).subscribe(
       res => {

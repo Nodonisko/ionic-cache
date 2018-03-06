@@ -1,14 +1,13 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
-import 'rxjs/add/operator/filter';
-import 'rxjs/add/observable/fromPromise';
-import 'rxjs/add/observable/fromEvent';
-import 'rxjs/add/observable/merge';
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/share';
-import 'rxjs/add/operator/catch';
-import 'rxjs/add/observable/throw';
+import { fromPromise } from 'rxjs/observable/fromPromise';
+import { _throw } from 'rxjs/observable/throw';
+import { fromEvent } from 'rxjs/observable/fromEvent';
+import { merge } from 'rxjs/observable/merge';
+import { share } from 'rxjs/operators/share';
+import { map } from 'rxjs/operators/map';
+import { catchError } from 'rxjs/operators/catchError';
 import { Storage } from '@ionic/storage';
 
 export const MESSAGES = {
@@ -33,9 +32,7 @@ export class CacheService {
   static responseOptions: any;
   static httpDeprecated: boolean = false;
 
-  constructor(
-    private _storage: Storage
-  ) {
+  constructor(private _storage: Storage) {
     this.loadHttp();
 
     try {
@@ -62,8 +59,8 @@ export class CacheService {
     } catch (e) {
       http = await import('@angular/common/http');
     }
-    CacheService.request         = http.Request || http.HttpRequest;
-    CacheService.response        = http.Response || http.HttpResponse;
+    CacheService.request = http.Request || http.HttpRequest;
+    CacheService.response = http.Response || http.HttpResponse;
     CacheService.responseOptions = http.ResponseOptions;
   }
 
@@ -107,10 +104,10 @@ export class CacheService {
    */
   private watchNetworkInit() {
     this.networkStatus = navigator.onLine;
-    const connect = Observable.fromEvent(window, 'online').map(() => true),
-      disconnect = Observable.fromEvent(window, 'offline').map(() => false);
+    const connect = fromEvent(window, 'online').pipe(map(() => true)),
+      disconnect = fromEvent(window, 'offline').pipe(map(() => false));
 
-    this.networkStatusChanges = Observable.merge(connect, disconnect).share();
+    this.networkStatusChanges = merge(connect, disconnect).pipe(share());
     this.networkStatusChanges.subscribe(status => {
       this.networkStatus = status;
     });
@@ -292,17 +289,22 @@ export class CacheService {
     ttl?: number
   ): Observable<any> {
     if (!this.cacheEnabled) return observable;
-    observable = observable.share();
-    return Observable.fromPromise(this.getItem(key))
-      .catch((e) => {
-        observable
-        .filter((response: any) => response instanceof CacheService.response)
-        .subscribe(
-          res => this.saveItem(key, res, groupKey, ttl),
-          error => Observable.throw(error)
+
+    observable = observable.pipe(share());
+
+    return fromPromise(this.getItem(key)).pipe(
+      catchError(e => {
+        observable.subscribe(
+          res => {
+            return this.saveItem(key, res, groupKey, ttl);
+          },
+          error => {
+            return _throw(error);
+          }
         );
         return observable;
-      });
+      })
+    );
   }
 
   /**
@@ -324,7 +326,7 @@ export class CacheService {
     if (!this.cacheEnabled) return observable;
 
     const observableSubject = new Subject();
-    observable = observable.share();
+    observable = observable.pipe(share());
 
     const subscribeOrigin = () => {
       observable.subscribe(
@@ -418,22 +420,22 @@ export class CacheService {
    * @return {boolean} - data from cache
    */
   static isRequest(data: any): boolean {
-
-    let orCondition = (
-      typeof data === 'object' && data.hasOwnProperty('status') &&
+    let orCondition =
+      typeof data === 'object' &&
+      data.hasOwnProperty('status') &&
       data.hasOwnProperty('statusText') &&
       data.hasOwnProperty('headers') &&
-      data.hasOwnProperty('url')
-    );
+      data.hasOwnProperty('url');
 
     if (CacheService.httpDeprecated) {
-      orCondition = (orCondition && data.hasOwnProperty('type') && data.hasOwnProperty('_body'));
+      orCondition =
+        orCondition &&
+        data.hasOwnProperty('type') &&
+        data.hasOwnProperty('_body');
     } else {
-      orCondition = (orCondition && data.hasOwnProperty('body'));
+      orCondition = orCondition && data.hasOwnProperty('body');
     }
 
-    return (
-      data && (data instanceof CacheService.request || orCondition)
-    );
+    return data && (data instanceof CacheService.request || orCondition);
   }
 }
