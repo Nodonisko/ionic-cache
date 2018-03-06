@@ -23,7 +23,6 @@ export type CacheValueFactory<T> = () => Promise<T>;
 
 @Injectable()
 export class CacheService {
-
   private ttl: number = 60 * 60; // one hour
   private cacheEnabled: boolean = true;
   private invalidateOffline: boolean = false;
@@ -37,14 +36,13 @@ export class CacheService {
   constructor(
     private _storage: Storage
   ) {
-
     this.loadHttp();
+
     try {
       this.watchNetworkInit();
-      _storage.ready()
-        .then(() => {
-          this.cacheEnabled = true;
-        });
+      _storage.ready().then(() => {
+        this.cacheEnabled = true;
+      });
     } catch (e) {
       this.cacheEnabled = false;
       console.error(MESSAGES[0], e);
@@ -85,8 +83,7 @@ export class CacheService {
    * @return {Promise<any>}
    */
   private resetDatabase(): Promise<any> {
-    return this.ready()
-      .then(() => this._storage.clear());
+    return this.ready().then(() => this._storage.clear());
   }
 
   /**
@@ -94,7 +91,7 @@ export class CacheService {
    * @param {number} ttl - TTL in seconds
    */
   setDefaultTTL(ttl: number): number {
-    return this.ttl = ttl;
+    return (this.ttl = ttl);
   }
 
   /**
@@ -143,12 +140,17 @@ export class CacheService {
    * @param {number} [ttl] - TTL in seconds
    * @return {Promise<any>} - saved data
    */
-  saveItem(key: string, data: any, groupKey: string = 'none', ttl: number = this.ttl): Promise<any> {
+  saveItem(
+    key: string,
+    data: any,
+    groupKey: string = 'none',
+    ttl: number = this.ttl
+  ): Promise<any> {
     if (!this.cacheEnabled) {
       return Promise.reject(MESSAGES[1]);
     }
 
-    const expires = new Date().getTime() + (ttl * 1000),
+    const expires = new Date().getTime() + ttl * 1000,
       type = CacheService.isRequest(data) ? 'request' : typeof data,
       value = JSON.stringify(data);
 
@@ -183,7 +185,8 @@ export class CacheService {
       return Promise.reject(MESSAGES[1]);
     }
 
-    return this._storage.get(key)
+    return this._storage
+      .get(key)
       .then(data => {
         if (!data) return Promise.reject('');
         return data;
@@ -192,18 +195,31 @@ export class CacheService {
   }
 
   /**
+   * @description Check if item exists in cache regardless if expired or not
+   * @param {string} key - Unique key
+   * @return {Promise<boolean | string>} - boolean - true if exists
+   */
+  itemExists(key: string): Promise<boolean | string> {
+    if (!this.cacheEnabled) {
+      return Promise.reject(MESSAGES[1]);
+    }
+
+    return this._storage.keys().then((keys: [string]) => {
+      return keys.indexOf(key) > -1;
+    });
+  }
+
+  /**
    * @description Get item from cache with expire check and correct type assign
    * @param {string} key - Unique key
    * @return {Promise<any>} - data from cache
    */
   getItem(key: string): Promise<any> {
-
     if (!this.cacheEnabled) {
       return Promise.reject(MESSAGES[1]);
     }
 
     return this.getRawItem(key).then(data => {
-
       if (data.expires < new Date().getTime()) {
         if (this.invalidateOffline) {
           return Promise.reject(MESSAGES[2] + key);
@@ -216,7 +232,12 @@ export class CacheService {
     });
   }
 
-  async getOrSetItem<T>(key: string, factory: CacheValueFactory<T>, groupKey: string = 'none', ttl: number = this.ttl): Promise<T> {
+  async getOrSetItem<T>(
+    key: string,
+    factory: CacheValueFactory<T>,
+    groupKey: string = 'none',
+    ttl: number = this.ttl
+  ): Promise<T> {
     let val: T;
 
     try {
@@ -264,7 +285,12 @@ export class CacheService {
    * @param {number} [ttl] - TTL in seconds
    * @return {Observable<any>} - data from cache or origin observable
    */
-  loadFromObservable(key: string, observable: any, groupKey?: string, ttl?: number): Observable<any> {
+  loadFromObservable(
+    key: string,
+    observable: any,
+    groupKey?: string,
+    ttl?: number
+  ): Observable<any> {
     if (!this.cacheEnabled) return observable;
     observable = observable.share();
     return Observable.fromPromise(this.getItem(key))
@@ -288,34 +314,42 @@ export class CacheService {
    * @param {string} [delayType='expired']
    * @return {Observable<any>} - data from cache or origin observable
    */
-  loadFromDelayedObservable(key: string, observable: any, groupKey?: string, ttl: number = this.ttl, delayType: string = 'expired'): Observable<any> {
+  loadFromDelayedObservable(
+    key: string,
+    observable: any,
+    groupKey?: string,
+    ttl: number = this.ttl,
+    delayType: string = 'expired'
+  ): Observable<any> {
     if (!this.cacheEnabled) return observable;
 
     const observableSubject = new Subject();
     observable = observable.share();
 
     const subscribeOrigin = () => {
-      observable.subscribe(res => {
-        this.saveItem(key, res, groupKey, ttl);
-        observableSubject.next(res);
-        observableSubject.complete();
-      },
-      (err) => {
-        observableSubject.error(err);
-      },
-      () => {
-        observableSubject.complete();
-      });
+      observable.subscribe(
+        res => {
+          this.saveItem(key, res, groupKey, ttl);
+          observableSubject.next(res);
+          observableSubject.complete();
+        },
+        err => {
+          observableSubject.error(err);
+        },
+        () => {
+          observableSubject.complete();
+        }
+      );
     };
 
     this.getItem(key)
-      .then((data) => {
+      .then(data => {
         observableSubject.next(data);
         if (delayType === 'all') {
           subscribeOrigin();
         }
       })
-      .catch((e) => {
+      .catch(e => {
         this.getRawItem(key)
           .then(res => {
             observableSubject.next(CacheService.decodeRawData(res));
