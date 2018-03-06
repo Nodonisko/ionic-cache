@@ -232,8 +232,8 @@ export class CacheService {
   async getOrSetItem<T>(
     key: string,
     factory: CacheValueFactory<T>,
-    groupKey: string = 'none',
-    ttl: number = this.ttl
+    groupKey?: string,
+    ttl?: number
   ): Promise<T> {
     let val: T;
 
@@ -241,7 +241,7 @@ export class CacheService {
       val = await this.getItem(key);
     } catch (error) {
       val = await factory();
-      await this.saveItem(key, val);
+      await this.saveItem(key, val, groupKey, ttl);
     }
 
     return val;
