@@ -34,12 +34,14 @@ export class CacheService {
 
   constructor(private _storage: Storage) {
     this.loadHttp();
+    this.watchNetworkInit();
+    this.loadCache();
+  }
 
+  private async loadCache() {
     try {
-      this.watchNetworkInit();
-      _storage.ready().then(() => {
-        this.cacheEnabled = true;
-      });
+      await this._storage.ready();
+      this.cacheEnabled = true;
     } catch (e) {
       this.cacheEnabled = false;
       console.error(MESSAGES[0], e);
@@ -64,8 +66,8 @@ export class CacheService {
     CacheService.responseOptions = http.ResponseOptions;
   }
 
-  ready(): Promise<any> {
-    return this._storage.ready().then(() => Promise.resolve());
+  async ready(): Promise<any> {
+    await this._storage.ready();
   }
 
   /**
@@ -79,8 +81,10 @@ export class CacheService {
    * @description Delete DB table and create new one
    * @return {Promise<any>}
    */
-  private resetDatabase(): Promise<any> {
-    return this.ready().then(() => this._storage.clear());
+  private async resetDatabase(): Promise<any> {
+    await this.ready();
+
+    return await this._storage.clear();
   }
 
   /**
@@ -144,7 +148,7 @@ export class CacheService {
     ttl: number = this.ttl
   ): Promise<any> {
     if (!this.cacheEnabled) {
-      return Promise.reject(MESSAGES[1]);
+      throw new Error(MESSAGES[1]);
     }
 
     const expires = new Date().getTime() + ttl * 1000,
@@ -166,7 +170,7 @@ export class CacheService {
    */
   removeItem(key: string): Promise<any> {
     if (!this.cacheEnabled) {
-      return Promise.reject(MESSAGES[1]);
+      throw new Error(MESSAGES[1]);
     }
 
     return this._storage.remove(key);
@@ -177,18 +181,21 @@ export class CacheService {
    * @param {string} key - Unique key
    * @return {Promise<any>} - data from cache
    */
-  getRawItem<T = any>(key: string): Promise<T> {
+  async getRawItem<T = any>(key: string): Promise<T> {
     if (!this.cacheEnabled) {
-      return Promise.reject(MESSAGES[1]);
+      throw new Error(MESSAGES[1]);
     }
 
-    return this._storage
-      .get(key)
-      .then(data => {
-        if (!data) return Promise.reject('');
+    try {
+      let data = await this._storage.get(key);
+      if(!!data) {
         return data;
-      })
-      .catch(() => Promise.reject(MESSAGES[3] + key));
+      }
+
+      throw new Error('');
+    } catch (err) {
+      throw new Error(MESSAGES[3] + key);
+    }
   }
 
   /**
@@ -196,14 +203,13 @@ export class CacheService {
    * @param {string} key - Unique key
    * @return {Promise<boolean | string>} - boolean - true if exists
    */
-  itemExists(key: string): Promise<boolean | string> {
+  async itemExists(key: string): Promise<boolean | string> {
     if (!this.cacheEnabled) {
-      return Promise.reject(MESSAGES[1]);
+      throw new Error(MESSAGES[1]);
     }
 
-    return this._storage.keys().then((keys: [string]) => {
-      return keys.indexOf(key) > -1;
-    });
+    let keys = await this._storage.keys();
+    return keys.indexOf(key) > -1;
   }
 
   /**
@@ -211,22 +217,18 @@ export class CacheService {
    * @param {string} key - Unique key
    * @return {Promise<any>} - data from cache
    */
-  getItem<T = any>(key: string): Promise<T> {
+  async getItem<T = any>(key: string): Promise<T> {
     if (!this.cacheEnabled) {
-      return Promise.reject(MESSAGES[1]);
+      throw new Error(MESSAGES[1]);
     }
 
-    return this.getRawItem(key).then(data => {
-      if (data.expires < new Date().getTime()) {
-        if (this.invalidateOffline) {
-          return Promise.reject(MESSAGES[2] + key);
-        } else if (this.isOnline()) {
-          return Promise.reject(MESSAGES[2] + key);
-        }
-      }
+    let data = await this.getRawItem(key);
 
-      return CacheService.decodeRawData(data);
-    });
+    if (data.expires < new Date().getTime() && (this.invalidateOffline || this.isOnline())) {
+      throw new Error(MESSAGES[2] + key);
+    }
+
+    return CacheService.decodeRawData(data);
   }
 
   async getOrSetItem<T>(
@@ -269,9 +271,9 @@ export class CacheService {
       }
 
       return new CacheService.response(response);
-    } else {
-      return dataJson;
     }
+
+    return dataJson;
   }
 
   /**
@@ -302,6 +304,7 @@ export class CacheService {
             return _throw(error);
           }
         );
+
         return observable;
       })
     );
@@ -369,7 +372,7 @@ export class CacheService {
    */
   clearAll(): Promise<any> {
     if (!this.cacheEnabled) {
-      return Promise.reject(MESSAGES[2]);
+      throw new Error(MESSAGES[2]);
     }
 
     return this.resetDatabase();
@@ -382,16 +385,16 @@ export class CacheService {
    */
   clearExpired(ignoreOnlineStatus = false): Promise<any> {
     if (!this.cacheEnabled) {
-      return Promise.reject(MESSAGES[2]);
+      throw new Error(MESSAGES[2]);
     }
 
     if (!this.isOnline() && !ignoreOnlineStatus) {
-      return Promise.reject(MESSAGES[4]);
+      throw new Error(MESSAGES[4]);
     }
 
     let datetime = new Date().getTime();
     let promises: Promise<any>[] = [];
-    this._storage.forEach((val: any, key: string) => {
+    this._storage.forEach((val, key) => {
       if (val && val.expires < datetime) promises.push(this.removeItem(key));
     });
 
@@ -405,12 +408,14 @@ export class CacheService {
    */
   async clearGroup(groupKey: string): Promise<any> {
     if (!this.cacheEnabled) {
-      return Promise.reject(MESSAGES[2]);
+      throw new Error(MESSAGES[2]);
     }
+
     let promises: Promise<any>[] = [];
     await this._storage.forEach((val: any, key: string) => {
       if (val && val.groupKey === groupKey) promises.push(this.removeItem(key));
     });
+
     return Promise.all(promises);
   }
 
