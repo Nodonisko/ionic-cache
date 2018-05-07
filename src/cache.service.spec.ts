@@ -13,10 +13,11 @@ import {
   platformBrowserDynamicTesting
 } from '@angular/platform-browser-dynamic/testing';
 import { Observable } from 'rxjs/Observable';
-import 'rxjs/add/observable/of';
-import 'rxjs/add/observable/throw';
-import 'rxjs/add/operator/count';
 import { Storage } from '@ionic/storage';
+
+import { of } from 'rxjs/observable/of';
+import { _throw } from 'rxjs/observable/throw';
+import { count } from 'rxjs/operators/count';
 
 TestBed.initTestEnvironment(
   BrowserDynamicTestingModule,
@@ -217,7 +218,7 @@ describe('Observable Caching', () => {
     world: "It's beautiful day" // tslint:disable-line
   };
 
-  let observable = Observable.of(mockData);
+  let observable = of(mockData);
 
   let service: CacheService;
 
@@ -332,8 +333,8 @@ describe('Delayed observable caching', () => {
     hello: 'Hello world again'
   };
 
-  const observable = Observable.of(mockData);
-  const observable2 = Observable.of(mockData2);
+  const observable = of(mockData);
+  const observable2 = of(mockData2);
 
   let service: CacheService;
 
@@ -383,7 +384,7 @@ describe('Delayed observable caching', () => {
   it('should return 2 responses (cache, server) if is NOT exprired and delayType is all (async)', done => {
     service
       .loadFromDelayedObservable(key, observable2, groupKey, ttl, 'all')
-      .count(() => true)
+      .pipe(count(() => true))
       .subscribe(
         count => {
           expect(observable2.subscribe).toHaveBeenCalled();
@@ -427,9 +428,9 @@ describe('Delayed observable caching error', () => {
     hello: 'Hello world again'
   };
 
-  const observable = Observable.of(mockData);
-  const observable2 = Observable.of(mockData2);
-  const observableError = Observable.throw(mockData);
+  const observable = of(mockData);
+  const observable2 = of(mockData2);
+  const observableError = _throw(mockData);
 
   let service: CacheService;
 
