@@ -181,7 +181,7 @@ export class CacheService {
    * @param {string} key - Unique key
    * @return {Promise<any>} - data from cache
    */
-  async getRawItem(key: string): Promise<any> {
+  async getRawItem<T = any>(key: string): Promise<T> {
     if (!this.cacheEnabled) {
       throw new Error(MESSAGES[1]);
     }
@@ -217,7 +217,7 @@ export class CacheService {
    * @param {string} key - Unique key
    * @return {Promise<any>} - data from cache
    */
-  async getItem(key: string): Promise<any> {
+  async getItem<T = any>(key: string): Promise<T> {
     if (!this.cacheEnabled) {
       throw new Error(MESSAGES[1]);
     }
@@ -240,7 +240,7 @@ export class CacheService {
     let val: T;
 
     try {
-      val = await this.getItem(key);
+      val = await this.getItem<T>(key);
     } catch (error) {
       val = await factory();
       await this.saveItem(key, val, groupKey, ttl);
@@ -284,12 +284,12 @@ export class CacheService {
    * @param {number} [ttl] - TTL in seconds
    * @return {Observable<any>} - data from cache or origin observable
    */
-  loadFromObservable(
+  loadFromObservable<T = any>(
     key: string,
     observable: any,
     groupKey?: string,
     ttl?: number
-  ): Observable<any> {
+  ): Observable<T> {
     if (!this.cacheEnabled) return observable;
 
     observable = observable.pipe(share());
@@ -319,16 +319,16 @@ export class CacheService {
    * @param {string} [delayType='expired']
    * @return {Observable<any>} - data from cache or origin observable
    */
-  loadFromDelayedObservable(
+  loadFromDelayedObservable<T = any>(
     key: string,
-    observable: any,
+    observable: Observable<T>,
     groupKey?: string,
     ttl: number = this.ttl,
     delayType: string = 'expired'
-  ): Observable<any> {
+  ): Observable<T> {
     if (!this.cacheEnabled) return observable;
 
-    const observableSubject = new Subject();
+    const observableSubject = new Subject<T>();
     observable = observable.pipe(share());
 
     const subscribeOrigin = () => {
@@ -347,7 +347,7 @@ export class CacheService {
       );
     };
 
-    this.getItem(key)
+    this.getItem<T>(key)
       .then(data => {
         observableSubject.next(data);
         if (delayType === 'all') {
@@ -355,7 +355,7 @@ export class CacheService {
         }
       })
       .catch(e => {
-        this.getRawItem(key)
+        this.getRawItem<T>(key)
           .then(res => {
             observableSubject.next(CacheService.decodeRawData(res));
             subscribeOrigin();
