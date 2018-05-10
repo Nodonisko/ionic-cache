@@ -188,7 +188,7 @@ export class CacheService {
 
     try {
       let data = await this._storage.get(key);
-      if(!!data) {
+      if (!!data) {
         return data;
       }
 

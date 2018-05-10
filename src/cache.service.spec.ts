@@ -12,7 +12,6 @@ import {
   BrowserDynamicTestingModule,
   platformBrowserDynamicTesting
 } from '@angular/platform-browser-dynamic/testing';
-import { Observable } from 'rxjs/Observable';
 import { Storage } from '@ionic/storage';
 
 import { of } from 'rxjs/observable/of';
@@ -40,6 +39,8 @@ describe('CacheService', () => {
         driverOrder: ['indexeddb', 'sqlite', 'websql']
       })
     );
+
+    service.setOfflineInvalidate(false);
 
     await service.ready();
     done();
@@ -268,7 +269,7 @@ describe('Observable caching errors', () => {
     world: "It's beautiful day" // tslint:disable-line
   };
 
-  let observableError = Observable.throw(mockData);
+  let observableError = _throw(mockData);
 
   let service: CacheService;
 
