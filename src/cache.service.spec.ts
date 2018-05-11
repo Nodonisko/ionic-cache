@@ -197,6 +197,66 @@ describe('CacheService', () => {
   });
 });
 
+describe('CacheService Deletion', () => {
+  let service: CacheService;
+  let cacheKey = 'banana stand';
+  let cacheValue = 'always money';
+
+  beforeEach(async done => {
+    service = new CacheService(
+      new Storage({
+        name: '__ionicCache',
+        driverOrder: ['indexeddb', 'sqlite', 'websql']
+      })
+    );
+
+    await service.ready();
+    await service.clearAll();
+
+    done();
+  });
+
+
+  it('should remove items', async () => {
+    await service.saveItem(cacheKey, cacheValue);
+    await service.removeItem(cacheKey);
+
+    let keys = await service.getRawItems();
+    expect(keys.length).toEqual(0);
+  });
+
+  it('should remove items via wildcard', async () => {
+    await Promise.all([
+      service.saveItem('movies/comedy/1', 'Scott Pilgrim vs. The World'),
+      service.saveItem('movies/comedy/2', 'The Princess Bride'),
+      service.saveItem('songs/metal/1', 'Who Bit the Moon'),
+      service.saveItem('songs/metal/2', 'Hail The Apocalypse'),
+      service.saveItem('songs/electronica/1', 'Power Glove'),
+      service.saveItem('songs/electronica/2', 'Centipede'),
+    ]);
+
+    await service.removeItems('movies/*');
+    let keys = await service.getRawItems();
+    expect(keys.length).toEqual(4);
+
+    await service.removeItems('*electronica*');
+    keys = await service.getRawItems();
+    expect(keys.length).toEqual(2);
+
+    await service.removeItems('*/1');
+    keys = await service.getRawItems();
+    expect(keys.length).toEqual(1);
+  });
+
+  afterAll(async done => {
+    try {
+      await service.clearAll();
+    } catch (e) {}
+
+    done();
+  });
+});
+
 describe('Observable Caching', () => {
   const key: string = 'http_cache_test';
 

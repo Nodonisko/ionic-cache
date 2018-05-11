@@ -182,7 +182,7 @@ console.log('Saved data: ', data);
 ...
 ```
 
-### Removing cached items
+#### Removing cached items
 
 You can also remove cached items by using the `removeItem` method.
 
@@ -194,7 +194,24 @@ this.cache.removeItem(key);
 ...
 ```
 
-### Cached promise existence
+#### Removing multiple cached items
+
+You can utilize the `removeItems` method to remove multiple items based on a wildcard pattern.
+
+```js
+...
+await Promise.all([
+    service.saveItem('movies/comedy/1', 'Scott Pilgrim vs. The World'),
+    service.saveItem('movies/comedy/2', 'The Princess Bride'),
+    service.saveItem('songs/metal/1', 'Who Bit the Moon'),
+    service.saveItem('songs/metal/2', 'Deception - Concealing Fate, Pt. 2'),
+]);
+
+this.cache.removeItems('songs/metal/*');
+...
+```
+
+#### Cached promise existence
 
 If you need to check whether or not an item has been cached, ignoring whether or not it's expired, you can use the `itemExists` method.
 
@@ -206,7 +223,7 @@ let exists = await this.cache.itemExists(key); // returns either a boolean indic
 ...
 ```
 
-### Raw cached item
+#### Raw cached item
 
 If you ever need to get a cached item regardless of whether it's expired or not, you can use the `getRawItem` method.
 
@@ -215,6 +232,14 @@ If you ever need to get a cached item regardless of whether it's expired or not,
 let key = 'some-promise';
 
 let item = await this.cache.getRawItem(key);
+...
+```
+
+There's also the `getRawItems` method, which returns a list of type `RawCacheItem` of all of the cached items.
+```js
+...
+let rawItems = await this.cache.getRawItems();
+let firstItem = rawItems[0]; //Has the properties: key, value, expires, type, groupKey
 ...
 ```
 
