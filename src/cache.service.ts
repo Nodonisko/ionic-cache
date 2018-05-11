@@ -10,6 +10,14 @@ import { map } from 'rxjs/operators/map';
 import { catchError } from 'rxjs/operators/catchError';
 import { Storage } from '@ionic/storage';
 
+export interface RawCacheItem {
+  key: string;
+  value: any;
+  expires: number;
+  type: string;
+  groupKey: string;
+}
+
 export const MESSAGES = {
   0: 'Cache initialization error: ',
   1: 'Cache is not enabled.',
@@ -177,11 +185,57 @@ export class CacheService {
   }
 
   /**
+   * @description Removes all items with a key that matches pattern
+   * @return {Promise<any>}
+   */
+  async removeItems(pattern: string): Promise<any> {
+    if (!this.cacheEnabled) {
+      throw new Error(MESSAGES[1]);
+    }
+
+    let regex = new RegExp(`^${pattern.split('*').join('.*')}$`);
+    let keys = await this.getRawItems().then(items => items.map(i => i.key));
+
+    return Promise.all(
+      keys
+      .filter(key => key && regex.test(key))
+      .map(key => this.removeItem(key))
+    );
+  }
+
+  /**
+   * @description Returns all of the cached items without an expire check.
+   * @return {Promise<RawCacheItem[]>}
+   */
+  async getRawItems(): Promise<RawCacheItem[]> {
+    if (!this.cacheEnabled) {
+      throw new Error(MESSAGES[1]);
+    }
+
+    let items: RawCacheItem[] = [];
+    await this._storage.forEach((val: any, key: string) => {
+      if (this.isCachedItem(val)) {
+        items.push(Object.assign({ key: key }, val));
+      }
+    });
+
+    return items;
+  }
+
+  /**
+   * @description Returns whether or not an object is a cached item.
+   * @return {bool}
+   */
+  private isCachedItem(item: any) {
+    return item && item.expires && item.type;
+  }
+
+  /**
    * @description Get item from cache without expire check etc.
    * @param {string} key - Unique key
    * @return {Promise<any>} - data from cache
    */
-  async getRawItem<T = any>(key: string): Promise<T> {
+  async getRawItem<T = any>(key: string): Promise<RawCacheItem> {
     if (!this.cacheEnabled) {
       throw new Error(MESSAGES[1]);
     }
@@ -254,7 +308,7 @@ export class CacheService {
    * @param {any} data - Data
    * @return {any} - decoded data
    */
-  static decodeRawData(data: any): any {
+  static decodeRawData(data: RawCacheItem): any {
     let dataJson = JSON.parse(data.value);
     if (CacheService.isRequest(dataJson)) {
       let response: any = {
