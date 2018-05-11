@@ -39,6 +39,7 @@ describe('CacheService', () => {
   const groupKey = 'fooGroup';
   const cacheValue = 'ibby';
   const cacheFactoryValue = 100;
+  let originalTimeout: number;
 
   beforeAll(async done => {
     service = new CacheService(
@@ -51,6 +52,10 @@ describe('CacheService', () => {
     service.setOfflineInvalidate(false);
 
     await service.ready();
+
+    originalTimeout = jasmine.DEFAULT_TIMEOUT_INTERVAL;
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = ttl * 2;
+
     done();
   });
 
@@ -196,6 +201,8 @@ describe('CacheService', () => {
 
   afterAll(async done => {
     console.info('Clearing cache');
+
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = originalTimeout;
 
     try {
       await service.clearAll();
