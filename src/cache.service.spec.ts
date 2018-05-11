@@ -18,6 +18,14 @@ import { of } from 'rxjs/observable/of';
 import { _throw } from 'rxjs/observable/throw';
 import { count } from 'rxjs/operators/count';
 
+function isPhantomJs() {
+  return !!(<any>window)._phantom;
+}
+
+function getTtl() {
+  return isPhantomJs() ? 5 : 2;
+}
+
 TestBed.initTestEnvironment(
   BrowserDynamicTestingModule,
   platformBrowserDynamicTesting()
@@ -25,7 +33,7 @@ TestBed.initTestEnvironment(
 
 describe('CacheService', () => {
   let service: CacheService;
-  const ttl = 0.4;
+  const ttl = getTtl();
   const key = 'https://github.com/Nodonisko/ionic-cache';
   const factoryKey = 'anotherKey';
   const groupKey = 'fooGroup';
@@ -316,7 +324,7 @@ describe('Observable caching errors', () => {
 });
 
 describe('Delayed observable caching', () => {
-  const ttl = 1;
+  const ttl = getTtl();
   const key = 'https://github.com/Nodonisko/ionic-cache';
   const groupKey = 'fooGroup';
   const mockData: any = {
@@ -391,7 +399,7 @@ describe('Delayed observable caching', () => {
       );
   });
 
-  it('should return 2 responses (cache, server) if is NOT exprired and delayType is all (async)', done => {
+  it('should return 2 responses (cache, server) if is NOT expired and delayType is all (async)', done => {
     service
       .loadFromDelayedObservable(key, observable2, groupKey, ttl, 'all')
       .subscribe(
@@ -414,7 +422,7 @@ describe('Delayed observable caching', () => {
 });
 
 describe('Delayed observable caching error', () => {
-  const ttl = 1;
+  const ttl = getTtl();
   const key = 'https://github.com/Nodonisko/ionic-cache';
   const groupKey = 'fooGroup';
   const mockData: any = {

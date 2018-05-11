@@ -46,7 +46,10 @@ module.exports = config => {
       'Chrome',
       // 'PhantomJS'
     ],
-    singleRun: false
+    singleRun: false,
+    client: {
+      useIframe: false
+    }
   };
 
   if (process.env.CIRCLECI) {
