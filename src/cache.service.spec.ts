@@ -54,7 +54,7 @@ describe('CacheService', () => {
     await service.ready();
 
     originalTimeout = jasmine.DEFAULT_TIMEOUT_INTERVAL;
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = ttl * 2;
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = ttl * 1000 * 2;
 
     done();
   });
