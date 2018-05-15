@@ -153,13 +153,10 @@ describe('CacheService', () => {
     }
   });
 
-  it('should disable cache', () => {
-    service.enableCache(false);
-    expect((<any>service).cacheEnabled === false).toBeTruthy();
-  });
-
   it('itemExist should reject because cache is disabled (async)', async done => {
     try {
+      service.enableCache(false);
+
       let value = await service.itemExists(key);
       expect(value).toBeUndefined();
       done();
@@ -170,9 +167,9 @@ describe('CacheService', () => {
   });
 
   it('should throw an error when getting item and cache is disabled', async done => {
-    expect((<any>service).cacheEnabled === false).toBeTruthy();
-
     try {
+      service.enableCache(false);
+
       let res = await service.getItem(key);
       expect(res).toBeUndefined();
       done();
@@ -182,9 +179,16 @@ describe('CacheService', () => {
     }
   });
 
-  it('should enable cache', () => {
-    service.enableCache(true);
-    expect((<any>service).cacheEnabled === true).toBeTruthy();
+  it('should enable cache', async done => {
+    try {
+      service.enableCache(true);
+
+      await service.getOrSetItem(key, () => Promise.resolve(cacheFactoryValue));
+      done();
+    } catch (e) {
+      expect(e).toBeUndefined();
+      done();
+    }
   });
 
   it('itemExists should return false if item not exists', async done => {
@@ -193,6 +197,29 @@ describe('CacheService', () => {
 
       let res = await service.itemExists(key);
       expect(res).toBeFalsy();
+      done();
+    } catch (e) {
+      expect(e).toBeUndefined();
+      done();
+    }
+  });
+
+  it('should work with multiple instances', async done => {
+    try {
+      await service.clearAll();
+
+      await service.getOrSetItem(key, () => Promise.resolve(cacheFactoryValue));
+
+      let secondService = new CacheService(
+        new CacheStorageService(new Storage({
+          name: '__ionicCache',
+          driverOrder: ['indexeddb', 'sqlite', 'websql']
+        }), 'ionic-cache-test-')
+      );
+
+      let items = await secondService.getRawItems();
+      expect(items.length).toEqual(1);
+
       done();
     } catch (e) {
       expect(e).toBeUndefined();
