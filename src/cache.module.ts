@@ -1,6 +1,7 @@
 import { NgModule, ModuleWithProviders } from '@angular/core';
-import { CacheService } from './cache.service';
-import { IonicStorageModule } from '@ionic/storage';
+import { CacheService, CacheConfig } from './cache.service';
+import { IonicStorageModule, Storage } from '@ionic/storage';
+import { CacheStorageService } from './cache-storage.service';
 
 @NgModule({
   imports: [
@@ -11,11 +12,17 @@ import { IonicStorageModule } from '@ionic/storage';
   ]
 })
 export class CacheModule {
-  static forRoot(): ModuleWithProviders {
+  static forRoot(cacheConfig?: CacheConfig): ModuleWithProviders {
     return {
       ngModule: CacheModule,
       providers: [
-        CacheService
+        {
+          provide: CacheService,
+          useFactory: (storage: Storage) => {
+            return new CacheService(new CacheStorageService(storage, cacheConfig.keyPrefix || ''));
+          },
+          deps: [Storage]
+        }
       ]
     };
   }

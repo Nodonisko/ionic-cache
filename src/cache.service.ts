@@ -8,14 +8,10 @@ import { merge } from 'rxjs/observable/merge';
 import { share } from 'rxjs/operators/share';
 import { map } from 'rxjs/operators/map';
 import { catchError } from 'rxjs/operators/catchError';
-import { Storage } from '@ionic/storage';
+import { CacheStorageService, StorageCacheItem } from './cache-storage.service';
 
-export interface RawCacheItem {
-  key: string;
-  value: any;
-  expires: number;
-  type: string;
-  groupKey: string;
+export interface CacheConfig {
+  keyPrefix?: string;
 }
 
 export const MESSAGES = {
@@ -40,7 +36,9 @@ export class CacheService {
   static responseOptions: any;
   static httpDeprecated: boolean = false;
 
-  constructor(private _storage: Storage) {
+  constructor(
+    private _storage: CacheStorageService
+  ) {
     this.loadHttp();
     this.watchNetworkInit();
     this.loadCache();
@@ -92,7 +90,11 @@ export class CacheService {
   private async resetDatabase(): Promise<any> {
     await this.ready();
 
-    return await this._storage.clear();
+    let items = await this._storage.all();
+    return Promise.all(
+      items
+      .map(item => this.removeItem(item.key))
+    );
   }
 
   /**
@@ -194,40 +196,14 @@ export class CacheService {
     }
 
     let regex = new RegExp(`^${pattern.split('*').join('.*')}$`);
-    let keys = await this.getRawItems().then(items => items.map(i => i.key));
+    let items = await this._storage.all();
 
     return Promise.all(
-      keys
+      items
+      .map(item => item.key)
       .filter(key => key && regex.test(key))
       .map(key => this.removeItem(key))
     );
-  }
-
-  /**
-   * @description Returns all of the cached items without an expire check.
-   * @return {Promise<RawCacheItem[]>}
-   */
-  async getRawItems(): Promise<RawCacheItem[]> {
-    if (!this.cacheEnabled) {
-      throw new Error(MESSAGES[1]);
-    }
-
-    let items: RawCacheItem[] = [];
-    await this._storage.forEach((val: any, key: string) => {
-      if (this.isCachedItem(val)) {
-        items.push(Object.assign({ key: key }, val));
-      }
-    });
-
-    return items;
-  }
-
-  /**
-   * @description Returns whether or not an object is a cached item.
-   * @return {bool}
-   */
-  private isCachedItem(item: any) {
-    return item && item.expires && item.type;
   }
 
   /**
@@ -235,7 +211,7 @@ export class CacheService {
    * @param {string} key - Unique key
    * @return {Promise<any>} - data from cache
    */
-  async getRawItem<T = any>(key: string): Promise<RawCacheItem> {
+  async getRawItem<T = any>(key: string): Promise<StorageCacheItem> {
     if (!this.cacheEnabled) {
       throw new Error(MESSAGES[1]);
     }
@@ -252,6 +228,10 @@ export class CacheService {
     }
   }
 
+  async getRawItems() {
+    return this._storage.all();
+  }
+
   /**
    * @description Check if item exists in cache regardless if expired or not
    * @param {string} key - Unique key
@@ -262,8 +242,7 @@ export class CacheService {
       throw new Error(MESSAGES[1]);
     }
 
-    let keys = await this._storage.keys();
-    return keys.indexOf(key) > -1;
+    return this._storage.exists(key);
   }
 
   /**
@@ -308,7 +287,7 @@ export class CacheService {
    * @param {any} data - Data
    * @return {any} - decoded data
    */
-  static decodeRawData(data: RawCacheItem): any {
+  static decodeRawData(data: StorageCacheItem): any {
     let dataJson = JSON.parse(data.value);
     if (CacheService.isRequest(dataJson)) {
       let response: any = {
@@ -437,7 +416,7 @@ export class CacheService {
    * @param {boolean} ignoreOnlineStatus -
    * @return {Promise<any>} - query promise
    */
-  clearExpired(ignoreOnlineStatus = false): Promise<any> {
+  async clearExpired(ignoreOnlineStatus = false): Promise<any> {
     if (!this.cacheEnabled) {
       throw new Error(MESSAGES[2]);
     }
@@ -446,13 +425,14 @@ export class CacheService {
       throw new Error(MESSAGES[4]);
     }
 
+    let items = await this._storage.all();
     let datetime = new Date().getTime();
-    let promises: Promise<any>[] = [];
-    this._storage.forEach((val, key) => {
-      if (val && val.expires < datetime) promises.push(this.removeItem(key));
-    });
 
-    return Promise.all(promises);
+    return Promise.all(
+      items
+      .filter(item => item.expires < datetime)
+      .map(item => this.removeItem(item.key))
+    );
   }
 
   /**
@@ -465,12 +445,13 @@ export class CacheService {
       throw new Error(MESSAGES[2]);
     }
 
-    let promises: Promise<any>[] = [];
-    await this._storage.forEach((val: any, key: string) => {
-      if (val && val.groupKey === groupKey) promises.push(this.removeItem(key));
-    });
+    let items = await this._storage.all();
 
-    return Promise.all(promises);
+    return Promise.all(
+      items
+      .filter(item => item.groupKey === groupKey)
+      .map(item => this.removeItem(item.key))
+    );
   }
 
   /**
