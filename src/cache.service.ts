@@ -8,6 +8,7 @@ import { merge } from 'rxjs/observable/merge';
 import { share } from 'rxjs/operators/share';
 import { map } from 'rxjs/operators/map';
 import { catchError } from 'rxjs/operators/catchError';
+import { defer } from 'rxjs/observable/defer';
 import { Storage } from '@ionic/storage';
 
 export interface RawCacheItem {
@@ -348,20 +349,22 @@ export class CacheService {
 
     observable = observable.pipe(share());
 
-    return fromPromise(this.getItem(key)).pipe(
-      catchError(e => {
-        observable.subscribe(
-          res => {
-            return this.saveItem(key, res, groupKey, ttl);
-          },
-          error => {
-            return _throw(error);
-          }
-        );
+    return defer(() => {
+      return fromPromise(this.getItem(key)).pipe(
+        catchError(e => {
+          observable.subscribe(
+            res => {
+              return this.saveItem(key, res, groupKey, ttl);
+            },
+            error => {
+              return _throw(error);
+            }
+          );
 
-        return observable;
-      })
-    );
+          return observable;
+        })
+      );
+    });
   }
 
   /**
