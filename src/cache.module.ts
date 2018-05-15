@@ -13,13 +13,14 @@ import { CacheStorageService } from './cache-storage.service';
 })
 export class CacheModule {
   static forRoot(cacheConfig?: CacheConfig): ModuleWithProviders {
+    cacheConfig = Object.assign({ keyPrefix: '' }, cacheConfig);
     return {
       ngModule: CacheModule,
       providers: [
         {
           provide: CacheService,
           useFactory: (storage: Storage) => {
-            return new CacheService(new CacheStorageService(storage, cacheConfig.keyPrefix || ''));
+            return new CacheService(new CacheStorageService(storage, cacheConfig.keyPrefix));
           },
           deps: [Storage]
         }
