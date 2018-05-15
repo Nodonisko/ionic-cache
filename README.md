@@ -69,6 +69,23 @@ class MyApp {
 
 ## Usage
 
+### Config
+
+Starting with version 3.0.2, `CacheModule.forRoot()` optionally accepts a config object.
+
+The config object currently accepts a `keyPrefix`, which is the the internal key prefix to use when storing items.
+
+For backwards compatibility this defaults to `''`, but it's recommended to set this to a different value in order to prevent issues with `clearAll()`.
+
+```ts
+@NgModule({
+  ...
+  imports: [
+    CacheModule.forRoot({ keyPrefix: 'my-app-cache' })
+  ],
+})
+```
+
 ### Observables
 
 #### Cache request
@@ -95,7 +112,7 @@ export class SomeProvider {
 
 If you need to cache the whole response, for example if you need to access the Headers, you can pass in an object with the observe key set to 'response', i.e. `{ observe: 'response' }`. Then you can use `.pipe(map(res => res.body))` to extract the response body.
 
-```js
+```ts
 ...
 let request = this.http.get(url, { observe: 'response' });
 return this.cache.loadFromObservable(cacheKey, request).pipe(map(res => res.body));
@@ -107,7 +124,7 @@ return this.cache.loadFromObservable(cacheKey, request).pipe(map(res => res.body
 `loadFromObservable` accepts an Observable and returns an Observable, so you are free to use all of the Observable operators. 
 For example error handling (on error, retry request every 6 seconds if fails):
 
-```js
+```ts
 ...
 let request = this.http.get(url)
 .pipe(retryWhen(error => error.timer(6000)));
@@ -122,7 +139,7 @@ return this.cache.loadFromObservable(cacheKey, request);
 When you call this method and it will return the cached date (even if it's expired) 
 and immediately send a request to the server and then return the new data.
 
-```js
+```ts
 ...
     let request = this.http.get(url);
     let delayType = 'all'; // this indicates that it should send a new request to the server every time, you can also set it to 'none' which indicates that it should only send a new request when it's expired
@@ -143,7 +160,7 @@ and immediately send a request to the server and then return the new data.
 
 #### Cache promises
 
-```js
+```ts
 ...
 let key = 'some-promise';
 let data = await this.cache.getOrSetItem(key, () => somePromiseFunction());
@@ -155,7 +172,7 @@ console.log("Saved data: ", data);
 
 Similarly, you can use `getOrSetItem` or `getItem` with classic data.
 
-```js
+```ts
 ...
 let key = 'heavily-calculated-function';
 
@@ -166,7 +183,7 @@ console.log('Saved data: ', data);
 
 If you need more control in the event that the item is expired or doesn't exist, you can use the `getItem` method with error handling.
 
-```js
+```ts
 ...
 let key = 'heavily-calculated-function';
 
@@ -186,7 +203,7 @@ console.log('Saved data: ', data);
 
 You can also remove cached items by using the `removeItem` method.
 
-```js
+```ts
 ...
 let key = 'some-promise';
 
@@ -198,7 +215,7 @@ this.cache.removeItem(key);
 
 You can utilize the `removeItems` method to remove multiple items based on a wildcard pattern.
 
-```js
+```ts
 ...
 await Promise.all([
     service.saveItem('movies/comedy/1', 'Scott Pilgrim vs. The World'),
@@ -215,7 +232,7 @@ this.cache.removeItems('songs/metal/*');
 
 If you need to check whether or not an item has been cached, ignoring whether or not it's expired, you can use the `itemExists` method.
 
-```js
+```ts
 ...
 let key = 'some-promise';
 
@@ -227,7 +244,7 @@ let exists = await this.cache.itemExists(key); // returns either a boolean indic
 
 If you ever need to get a cached item regardless of whether it's expired or not, you can use the `getRawItem` method.
 
-```js
+```ts
 ...
 let key = 'some-promise';
 
@@ -235,8 +252,8 @@ let item = await this.cache.getRawItem(key);
 ...
 ```
 
-There's also the `getRawItems` method, which returns a list of type `RawCacheItem` of all of the cached items.
-```js
+There's also the `getRawItems` method, which returns an array of the raw cached items.
+```ts
 ...
 let rawItems = await this.cache.getRawItems();
 let firstItem = rawItems[0]; //Has the properties: key, value, expires, type, groupKey
@@ -250,7 +267,7 @@ let firstItem = rawItems[0]; //Has the properties: key, value, expires, type, gr
 At times you may need to clear certain groups of cached items.
 For example, if you have an infinite scroll list with a lot of items and the user triggers a pull to refresh, you may want to delete all of the cached list items. To do this, you can supply a group key as the 3rd parameter of `loadFromObservable`.
 
-```js
+```ts
 ...
 loadList(pageNumber) {
     let url = "http://google.com/?page=" + pageNumber;
@@ -265,7 +282,7 @@ loadList(pageNumber) {
 
 Then when pull to refresh is triggered, you can use the `clearGroup` method and pass in your group key.
 
-```js
+```ts
 ...
 pullToRefresh() {
     this.cache.clearGroup("googleSearchPages");
@@ -277,7 +294,7 @@ pullToRefresh() {
 
 If you want a custom TTL for a single request, you can pass it as the fourth parameter.
 
-```js
+```ts
 let ttl = 60 * 60 * 24 * 7; // TTL in seconds for one week
 let request = this.http.get(url);
 
@@ -286,7 +303,7 @@ return this.cache.loadFromObservable(cacheKey, request, groupKey, ttl);
 
 #### Set default TTL
 
-```js
+```ts
 this.cache.setDefaultTTL(60 * 60); //set the default cache TTL for 1 hour
 ```
 
@@ -294,13 +311,17 @@ this.cache.setDefaultTTL(60 * 60); //set the default cache TTL for 1 hour
 
 It's automatically done on every startup, but you can do it manually.
 
-```js
+```ts
 this.cache.clearExpired();
 ```
 
 #### Delete all entries
 
-```js
+**!Important!**
+
+Make sure that you have a `keyPrefix` set in the CacheModule config, otherwise this will clear everything in Ionic Storage.
+
+```ts
 this.cache.clearAll();
 ```
 
@@ -308,7 +329,7 @@ this.cache.clearAll();
 
 You can disable cache without any issues, it will pass all of the original Observables through and all Promises will be rejected.
 
-```js
+```ts
 this.cache.enableCache(false);
 ```
 
@@ -316,6 +337,6 @@ this.cache.enableCache(false);
 
 You can also disable invalidating cached items when the device is offline.
 
-```js
+```ts
 this.cache.setOfflineInvalidate(false);
 ```

@@ -17,6 +17,7 @@ import { Storage } from '@ionic/storage';
 import { of } from 'rxjs/observable/of';
 import { _throw } from 'rxjs/observable/throw';
 import { count } from 'rxjs/operators/count';
+import { CacheStorageService } from './cache-storage.service';
 
 function isPhantomJs() {
   return !!(<any>window)._phantom;
@@ -43,10 +44,10 @@ describe('CacheService', () => {
 
   beforeAll(async done => {
     service = new CacheService(
-      new Storage({
+      new CacheStorageService(new Storage({
         name: '__ionicCache',
         driverOrder: ['indexeddb', 'sqlite', 'websql']
-      })
+      }), 'ionic-cache-test-')
     );
 
     service.setOfflineInvalidate(false);
@@ -152,13 +153,10 @@ describe('CacheService', () => {
     }
   });
 
-  it('should disable cache', () => {
-    service.enableCache(false);
-    expect((<any>service).cacheEnabled === false).toBeTruthy();
-  });
-
   it('itemExist should reject because cache is disabled (async)', async done => {
     try {
+      service.enableCache(false);
+
       let value = await service.itemExists(key);
       expect(value).toBeUndefined();
       done();
@@ -169,9 +167,9 @@ describe('CacheService', () => {
   });
 
   it('should throw an error when getting item and cache is disabled', async done => {
-    expect((<any>service).cacheEnabled === false).toBeTruthy();
-
     try {
+      service.enableCache(false);
+
       let res = await service.getItem(key);
       expect(res).toBeUndefined();
       done();
@@ -181,9 +179,16 @@ describe('CacheService', () => {
     }
   });
 
-  it('should enable cache', () => {
-    service.enableCache(true);
-    expect((<any>service).cacheEnabled === true).toBeTruthy();
+  it('should enable cache', async done => {
+    try {
+      service.enableCache(true);
+
+      await service.getOrSetItem(key, () => Promise.resolve(cacheFactoryValue));
+      done();
+    } catch (e) {
+      expect(e).toBeUndefined();
+      done();
+    }
   });
 
   it('itemExists should return false if item not exists', async done => {
@@ -199,13 +204,76 @@ describe('CacheService', () => {
     }
   });
 
-  afterAll(async done => {
-    console.info('Clearing cache');
+  it('should work with multiple instances', async done => {
+    try {
+      await service.clearAll();
 
+      await service.getOrSetItem(key, () => Promise.resolve(cacheFactoryValue));
+
+      let secondService = new CacheService(
+        new CacheStorageService(new Storage({
+          name: '__ionicCache',
+          driverOrder: ['indexeddb', 'sqlite', 'websql']
+        }), 'ionic-cache-test-')
+      );
+
+      let items = await secondService.getRawItems();
+      expect(items.length).toEqual(1);
+
+      done();
+    } catch (e) {
+      expect(e).toBeUndefined();
+      done();
+    }
+  });
+
+  afterAll(async done => {
     jasmine.DEFAULT_TIMEOUT_INTERVAL = originalTimeout;
 
     try {
       await service.clearAll();
+    } catch (e) {}
+
+    done();
+  });
+});
+
+describe('deleting items', () => {
+  let service: CacheService;
+  let storage: Storage;
+  let storageKey = 'bob loblaw';
+  let storageValue = 'lawblog';
+  let cacheKey = 'banana stand';
+  let cacheValue = 'always money';
+
+  beforeAll(async done => {
+    storage = new Storage({
+      name: '__ionicCache',
+      driverOrder: ['indexeddb', 'sqlite', 'websql']
+    });
+
+    service = new CacheService(
+      new CacheStorageService(storage, 'ionic-cache-test-')
+    );
+
+    await service.ready();
+    done();
+  });
+
+  it('should only clear cache items', async () => {
+    await storage.set(storageKey, storageValue);
+    await service.saveItem(cacheKey, cacheValue);
+    await service.clearAll();
+
+    let keys = await storage.keys();
+    expect(keys.length).toEqual(1);
+    expect(keys[0]).toEqual(storageKey);
+  });
+
+  afterAll(async done => {
+    try {
+      await service.clearAll();
+      await (<Storage>TestBed.get(Storage)).clear();
     } catch (e) {}
 
     done();
@@ -217,12 +285,21 @@ describe('CacheService Deletion', () => {
   let cacheKey = 'banana stand';
   let cacheValue = 'always money';
 
+  let wildcardItems = [
+    ['movies/comedy/1', 'Scott Pilgrim vs. The World'],
+    ['movies/comedy/2', 'The Princess Bride'],
+    ['songs/metal/1', 'Who Bit the Moon'],
+    ['songs/metal/2', 'Hail The Apocalypse'],
+    ['songs/electronica/1', 'Power Glove'],
+    ['songs/electronica/2', 'Centipede'],
+  ];
+
   beforeEach(async done => {
     service = new CacheService(
-      new Storage({
+      new CacheStorageService(new Storage({
         name: '__ionicCache',
         driverOrder: ['indexeddb', 'sqlite', 'websql']
-      })
+      }), 'ionic-cache-test-')
     );
 
     await service.ready();
@@ -230,7 +307,6 @@ describe('CacheService Deletion', () => {
 
     done();
   });
-
 
   it('should remove items', async () => {
     await service.saveItem(cacheKey, cacheValue);
@@ -240,27 +316,64 @@ describe('CacheService Deletion', () => {
     expect(keys.length).toEqual(0);
   });
 
-  it('should remove items via wildcard', async () => {
-    await Promise.all([
-      service.saveItem('movies/comedy/1', 'Scott Pilgrim vs. The World'),
-      service.saveItem('movies/comedy/2', 'The Princess Bride'),
-      service.saveItem('songs/metal/1', 'Who Bit the Moon'),
-      service.saveItem('songs/metal/2', 'Hail The Apocalypse'),
-      service.saveItem('songs/electronica/1', 'Power Glove'),
-      service.saveItem('songs/electronica/2', 'Centipede'),
-    ]);
+  it('should remove via wildcard (end)', async () => {
+    await wildcardItems.reduce(async (promise, data) => {
+      await promise;
+
+      return service.saveItem(data[0], data[1]);
+    }, Promise.resolve(true));
 
     await service.removeItems('movies/*');
     let keys = await service.getRawItems();
     expect(keys.length).toEqual(4);
+  });
 
-    await service.removeItems('*electronica*');
-    keys = await service.getRawItems();
-    expect(keys.length).toEqual(2);
+  it('should remove via wildcard (start)', async () => {
+    await wildcardItems.reduce(async (promise, data) => {
+      await promise;
+
+      return service.saveItem(data[0], data[1]);
+    }, Promise.resolve(true));
 
     await service.removeItems('*/1');
-    keys = await service.getRawItems();
-    expect(keys.length).toEqual(1);
+    let keys = await service.getRawItems();
+    expect(keys.length).toEqual(3);
+  });
+
+  it('should remove via wildcard (book-ended)', async () => {
+    await wildcardItems.reduce(async (promise, data) => {
+      await promise;
+
+      return service.saveItem(data[0], data[1]);
+    }, Promise.resolve(true));
+
+    await service.removeItems('*electronica*');
+    let keys = await service.getRawItems();
+    expect(keys.length).toEqual(4);
+  });
+
+  it('should remove via wildcard (middle)', async () => {
+    await wildcardItems.reduce(async (promise, data) => {
+      await promise;
+
+      return service.saveItem(data[0], data[1]);
+    }, Promise.resolve(true));
+
+    await service.removeItems('s*1');
+    let keys = await service.getRawItems();
+    expect(keys.length).toEqual(4);
+  });
+
+  it('should remove via wildcard (complex)', async () => {
+    await wildcardItems.reduce(async (promise, data) => {
+      await promise;
+
+      return service.saveItem(data[0], data[1]);
+    }, Promise.resolve(true));
+
+    await service.removeItems('songs*ctro*a/2');
+    let keys = await service.getRawItems();
+    expect(keys.length).toEqual(5);
   });
 
   afterAll(async done => {
@@ -286,10 +399,10 @@ describe('Observable Caching', () => {
 
   beforeAll(async done => {
     service = new CacheService(
-      new Storage({
+      new CacheStorageService(new Storage({
         name: '__ionicCache',
         driverOrder: ['indexeddb', 'sqlite', 'websql']
-      })
+      }), 'ionic-cache-test-')
     );
 
     await service.ready();
@@ -350,10 +463,10 @@ describe('Observable caching errors', () => {
 
   beforeAll(async done => {
     service = new CacheService(
-      new Storage({
+      new CacheStorageService(new Storage({
         name: '__ionicCache',
         driverOrder: ['indexeddb', 'sqlite', 'websql']
-      })
+      }), 'ionic-cache-test-')
     );
 
     await service.ready();
@@ -408,10 +521,10 @@ describe('Delayed observable caching', () => {
 
   beforeAll(async done => {
     service = new CacheService(
-      new Storage({
+      new CacheStorageService(new Storage({
         name: '__ionicCache',
         driverOrder: ['indexeddb', 'sqlite', 'websql']
-      })
+      }), 'ionic-cache-test-')
     );
 
     await service.ready();
@@ -507,10 +620,10 @@ describe('Delayed observable caching error', () => {
 
   beforeAll(async done => {
     service = new CacheService(
-      new Storage({
+      new CacheStorageService(new Storage({
         name: '__ionicCache',
         driverOrder: ['indexeddb', 'sqlite', 'websql']
-      })
+      }), 'ionic-cache-test-')
     );
 
     await service.ready();
