@@ -1,5 +1,3 @@
-**This library is looking for maintainer, contact me if you are interested**
-
 # Ionic cache service
 
 Ionic cache service that can cache almost everything. **It caches requests, observables, promises and classic data.** It uses [Ionic Storage](https://ionicframework.com/docs/storage/) so we support IndexedDB, SQLite (Cordova), WebSQL in this order.
