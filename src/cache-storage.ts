@@ -1,4 +1,3 @@
-import { Injectable } from '@angular/core';
 import { Storage } from '@ionic/storage';
 
 export interface StorageCacheItem {
@@ -9,13 +8,11 @@ export interface StorageCacheItem {
   groupKey: string;
 }
 
-@Injectable()
 export class CacheStorageService {
   constructor(
     private storage: Storage,
     private keyPrefix: string
   ) {
-
   }
 
   public ready() {

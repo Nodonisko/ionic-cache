@@ -9,7 +9,7 @@ import { share } from 'rxjs/operators/share';
 import { map } from 'rxjs/operators/map';
 import { catchError } from 'rxjs/operators/catchError';
 import { defer } from 'rxjs/observable/defer';
-import { CacheStorageService, StorageCacheItem } from './cache-storage.service';
+import { CacheStorageService, StorageCacheItem } from './cache-storage';
 
 export interface CacheConfig {
   keyPrefix?: string;
