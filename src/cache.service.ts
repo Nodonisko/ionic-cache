@@ -386,8 +386,11 @@ export class CacheService {
     this.getItem<T>(key)
       .then(data => {
         observableSubject.next(data);
+
         if (delayType === 'all') {
           subscribeOrigin();
+        } else {
+          observableSubject.complete();
         }
       })
       .catch(e => {
