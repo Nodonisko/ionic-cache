@@ -14,9 +14,8 @@ import {
 } from '@angular/platform-browser-dynamic/testing';
 import { Storage } from '@ionic/storage';
 
-import { of } from 'rxjs/observable/of';
-import { _throw } from 'rxjs/observable/throw';
-import { count } from 'rxjs/operators/count';
+import { of, throwError } from 'rxjs';
+import { count } from 'rxjs/operators';
 import { CacheStorageService } from './cache-storage';
 
 function isPhantomJs() {
@@ -457,7 +456,7 @@ describe('Observable caching errors', () => {
     world: "It's beautiful day" // tslint:disable-line
   };
 
-  let observableError = _throw(mockData);
+  let observableError = throwError(mockData);
 
   let service: CacheService;
 
@@ -614,7 +613,7 @@ describe('Delayed observable caching error', () => {
 
   const observable = of(mockData);
   const observable2 = of(mockData2);
-  const observableError = _throw(mockData);
+  const observableError = throwError(mockData);
 
   let service: CacheService;
 
