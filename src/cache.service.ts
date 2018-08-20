@@ -467,6 +467,7 @@ export class CacheService {
    */
   static isRequest(data: any): boolean {
     let orCondition =
+      data &&
       typeof data === 'object' &&
       data.hasOwnProperty('status') &&
       data.hasOwnProperty('statusText') &&
