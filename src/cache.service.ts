@@ -483,6 +483,6 @@ export class CacheService {
       orCondition = orCondition && data.hasOwnProperty('body');
     }
 
-    return data && (data instanceof CacheService.request || orCondition);
+    return data && ((CacheService.request && data instanceof CacheService.request) || orCondition);
   }
 }
