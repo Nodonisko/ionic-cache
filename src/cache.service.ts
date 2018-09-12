@@ -30,8 +30,6 @@ export class CacheService {
   private ttl: number = 60 * 60; // one hour
   private cacheEnabled: boolean = true;
   private invalidateOffline: boolean = false;
-  private networkStatusChanges: Observable<boolean>;
-  private networkStatus: boolean = true;
   static request: any;
   static response: any;
   static responseOptions: any;
@@ -41,7 +39,6 @@ export class CacheService {
     private _storage: CacheStorageService
   ) {
     this.loadHttp();
-    this.watchNetworkInit();
     this.loadCache();
   }
 
@@ -115,33 +112,11 @@ export class CacheService {
   }
 
   /**
-   * @description Start watching if devices is online or offline
-   */
-  private watchNetworkInit() {
-    this.networkStatus = navigator.onLine;
-    const connect = fromEvent(window, 'online').pipe(map(() => true)),
-      disconnect = fromEvent(window, 'offline').pipe(map(() => false));
-
-    this.networkStatusChanges = merge(connect, disconnect).pipe(share());
-    this.networkStatusChanges.subscribe(status => {
-      this.networkStatus = status;
-    });
-  }
-
-  /**
-   * @description Stream of network status changes
-   * * @return {Observable<boolean>} network status stream
-   */
-  getNetworkStatusChanges() {
-    return this.networkStatusChanges;
-  }
-
-  /**
    * @description Check if devices is online
    * @return {boolean} network status
    */
   isOnline() {
-    return this.networkStatus;
+    return navigator.onLine;
   }
 
   /**
@@ -258,7 +233,7 @@ export class CacheService {
 
     let data = await this.getRawItem(key);
 
-    if (data.expires < new Date().getTime() && (this.invalidateOffline || this.isOnline())) {
+    if (data.expires < new Date().getTime() && (this.invalidateOffline || navigator.onLine)) {
       throw new Error(MESSAGES[2] + key);
     }
 
@@ -427,7 +402,7 @@ export class CacheService {
       throw new Error(MESSAGES[2]);
     }
 
-    if (!this.isOnline() && !ignoreOnlineStatus) {
+    if (!navigator.onLine && !ignoreOnlineStatus) {
       throw new Error(MESSAGES[4]);
     }
 
