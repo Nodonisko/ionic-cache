@@ -22,7 +22,8 @@ export class CacheStorageService {
   public async set(key: string, value: any) {
     await this.ready();
 
-    return this.storage.set(this.buildKey(key), value);
+    let item = await this.storage.set(this.buildKey(key), value);
+    return !!item ? Object.assign({ key: key }, item) : null;
   }
 
   public async remove(key: string) {

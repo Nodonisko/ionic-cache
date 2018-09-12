@@ -157,7 +157,7 @@ export class CacheService {
     data: any,
     groupKey: string = 'none',
     ttl: number = this.ttl
-  ): Promise<any> {
+  ): Promise<StorageCacheItem> {
     if (!this.cacheEnabled) {
       throw new Error(MESSAGES[1]);
     }
