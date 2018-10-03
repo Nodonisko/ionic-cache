@@ -1,16 +1,21 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
-import { Request, Response, ResponseOptions } from '@angular/http';
-import 'rxjs/add/observable/fromPromise';
-import 'rxjs/add/observable/fromEvent';
-import 'rxjs/add/observable/merge';
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/share';
-import 'rxjs/add/operator/catch';
-import 'rxjs/add/observable/throw';
-import { Storage } from '@ionic/storage';
+import { fromPromise } from 'rxjs/observable/fromPromise';
+import { _throw } from 'rxjs/observable/throw';
+import { fromEvent } from 'rxjs/observable/fromEvent';
+import { merge } from 'rxjs/observable/merge';
+import { share } from 'rxjs/operators/share';
+import { map } from 'rxjs/operators/map';
+import { catchError } from 'rxjs/operators/catchError';
+import { defer } from 'rxjs/observable/defer';
+import { CacheStorageService, StorageCacheItem } from './cache-storage';
+
 import * as CryptoJS from 'crypto-js';
+
+export interface CacheConfig {
+  keyPrefix?: string;
+}
 
 export const MESSAGES = {
   0: 'Cache initialization error: ',
@@ -24,31 +29,55 @@ export type CacheValueFactory<T> = () => Promise<T>;
 
 @Injectable()
 export class CacheService {
-
   private ttl: number = 60 * 60; // one hour
   private cacheEnabled: boolean = true;
   private invalidateOffline: boolean = false;
   private networkStatusChanges: Observable<boolean>;
   private networkStatus: boolean = true;
   private encryptionKey: string;
+  static request: any;
+  static response: any;
+  static responseOptions: any;
+  static httpDeprecated: boolean = false;
 
   constructor(
-    private _storage: Storage
+    private _storage: CacheStorageService
   ) {
+    this.loadHttp();
+    this.watchNetworkInit();
+    this.loadCache();
+  }
+
+  private async loadCache() {
     try {
-      this.watchNetworkInit();
-      _storage.ready()
-        .then(() => {
-          this.cacheEnabled = true;
-        });
+      await this._storage.ready();
+      this.cacheEnabled = true;
     } catch (e) {
       this.cacheEnabled = false;
       console.error(MESSAGES[0], e);
     }
   }
 
-  ready(): Promise<any> {
-    return this._storage.ready().then(() => Promise.resolve());
+  private async loadHttp() {
+    if (CacheService.request && CacheService.response) {
+      return;
+    }
+
+    let http;
+    // try load @angular/http deprecated or @angular/common/http
+    try {
+      http = await import('@angular/http');
+      CacheService.httpDeprecated = true;
+    } catch (e) {
+      http = await import('@angular/common/http');
+    }
+    CacheService.request = http.Request || http.HttpRequest;
+    CacheService.response = http.Response || http.HttpResponse;
+    CacheService.responseOptions = http.ResponseOptions;
+  }
+
+  async ready(): Promise<any> {
+    await this._storage.ready();
   }
 
   /**
@@ -62,9 +91,14 @@ export class CacheService {
    * @description Delete DB table and create new one
    * @return {Promise<any>}
    */
-  private resetDatabase(): Promise<any> {
-    return this.ready()
-      .then(() => this._storage.clear());
+  private async resetDatabase(): Promise<any> {
+    await this.ready();
+
+    let items = await this._storage.all();
+    return Promise.all(
+      items
+      .map(item => this.removeItem(item.key))
+    );
   }
 
   /**
@@ -72,7 +106,7 @@ export class CacheService {
    * @param {number} ttl - TTL in seconds
    */
   setDefaultTTL(ttl: number): number {
-    return this.ttl = ttl;
+    return (this.ttl = ttl);
   }
 
   /**
@@ -97,10 +131,10 @@ export class CacheService {
    */
   private watchNetworkInit() {
     this.networkStatus = navigator.onLine;
-    const connect = Observable.fromEvent(window, 'online').map(() => true),
-      disconnect = Observable.fromEvent(window, 'offline').map(() => false);
+    const connect = fromEvent(window, 'online').pipe(map(() => true)),
+      disconnect = fromEvent(window, 'offline').pipe(map(() => false));
 
-    this.networkStatusChanges = Observable.merge(connect, disconnect).share();
+    this.networkStatusChanges = merge(connect, disconnect).pipe(share());
     this.networkStatusChanges.subscribe(status => {
       this.networkStatus = status;
     });
@@ -130,12 +164,17 @@ export class CacheService {
    * @param {number} [ttl] - TTL in seconds
    * @return {Promise<any>} - saved data
    */
-  saveItem(key: string, data: any, groupKey: string = 'none', ttl: number = this.ttl): Promise<any> {
+  saveItem(
+    key: string,
+    data: any,
+    groupKey: string = 'none',
+    ttl: number = this.ttl
+  ): Promise<any> {
     if (!this.cacheEnabled) {
-      return Promise.reject(MESSAGES[1]);
+      throw new Error(MESSAGES[1]);
     }
 
-    const expires = new Date().getTime() + (ttl * 1000),
+    const expires = new Date().getTime() + ttl * 1000,
       type = CacheService.isRequest(data) ? 'request' : typeof data,
       // value = JSON.stringify(data);
       value = this.encryptionKey ? CryptoJS.AES.encrypt(JSON.stringify(data), this.encryptionKey).toString() : JSON.stringify(data);
@@ -155,10 +194,30 @@ export class CacheService {
    */
   removeItem(key: string): Promise<any> {
     if (!this.cacheEnabled) {
-      return Promise.reject(MESSAGES[1]);
+      throw new Error(MESSAGES[1]);
     }
 
     return this._storage.remove(key);
+  }
+
+  /**
+   * @description Removes all items with a key that matches pattern
+   * @return {Promise<any>}
+   */
+  async removeItems(pattern: string): Promise<any> {
+    if (!this.cacheEnabled) {
+      throw new Error(MESSAGES[1]);
+    }
+
+    let regex = new RegExp(`^${pattern.split('*').join('.*')}$`);
+    let items = await this._storage.all();
+
+    return Promise.all(
+      items
+      .map(item => item.key)
+      .filter(key => key && regex.test(key))
+      .map(key => this.removeItem(key))
+    );
   }
 
   /**
@@ -166,17 +225,38 @@ export class CacheService {
    * @param {string} key - Unique key
    * @return {Promise<any>} - data from cache
    */
-  getRawItem(key: string): Promise<any> {
+  async getRawItem<T = any>(key: string): Promise<StorageCacheItem> {
     if (!this.cacheEnabled) {
-      return Promise.reject(MESSAGES[1]);
+      throw new Error(MESSAGES[1]);
     }
 
-    return this._storage.get(key)
-      .then(data => {
-        if (!data) return Promise.reject('');
+    try {
+      let data = await this._storage.get(key);
+      if (!!data) {
         return data;
-      })
-      .catch(() => Promise.reject(MESSAGES[3] + key));
+      }
+
+      throw new Error('');
+    } catch (err) {
+      throw new Error(MESSAGES[3] + key);
+    }
+  }
+
+  async getRawItems() {
+    return this._storage.all();
+  }
+
+  /**
+   * @description Check if item exists in cache regardless if expired or not
+   * @param {string} key - Unique key
+   * @return {Promise<boolean | string>} - boolean - true if exists
+   */
+  async itemExists(key: string): Promise<boolean | string> {
+    if (!this.cacheEnabled) {
+      throw new Error(MESSAGES[1]);
+    }
+
+    return this._storage.exists(key);
   }
 
   /**
@@ -184,34 +264,33 @@ export class CacheService {
    * @param {string} key - Unique key
    * @return {Promise<any>} - data from cache
    */
-  getItem(key: string): Promise<any> {
-
+  async getItem<T = any>(key: string): Promise<T> {
     if (!this.cacheEnabled) {
-      return Promise.reject(MESSAGES[1]);
+      throw new Error(MESSAGES[1]);
     }
 
-    return this.getRawItem(key).then(data => {
+    let data = await this.getRawItem(key);
 
-      if (data.expires < new Date().getTime()) {
-        if (this.invalidateOffline) {
-          return Promise.reject(MESSAGES[2] + key);
-        } else if (this.isOnline()) {
-          return Promise.reject(MESSAGES[2] + key);
-        }
-      }
+    if (data.expires < new Date().getTime() && (this.invalidateOffline || this.isOnline())) {
+      throw new Error(MESSAGES[2] + key);
+    }
 
-      return CacheService.decodeRawData(data, this.encryptionKey);
-    });
+    return CacheService.decodeRawData(data, this.encryptionKey);
   }
 
-  async getOrSetItem<T>(key: string, factory: CacheValueFactory<T>, groupKey: string = 'none', ttl: number = this.ttl): Promise<T> {
+  async getOrSetItem<T>(
+    key: string,
+    factory: CacheValueFactory<T>,
+    groupKey?: string,
+    ttl?: number
+  ): Promise<T> {
     let val: T;
 
     try {
-      val = await this.getItem(key);
+      val = await this.getItem<T>(key);
     } catch (error) {
       val = await factory();
-      await this.saveItem(key, val);
+      await this.saveItem(key, val, groupKey, ttl);
     }
 
     return val;
@@ -222,22 +301,27 @@ export class CacheService {
    * @param {any} data - Data
    * @return {any} - decoded data
    */
-  static decodeRawData(data: any, encryptionKey?: string): any {
+  static decodeRawData(data: StorageCacheItem, encryptionKey?: string): any {
     // let dataJson = JSON.parse(data.value);
     let dataJson = JSON.parse( encryptionKey ? CryptoJS.AES.decrypt(data.value, encryptionKey).toString(CryptoJS.enc.Utf8) : data.value);
     if (CacheService.isRequest(dataJson)) {
-      const requestOptions = new ResponseOptions({
-        body: dataJson._body,
+      let response: any = {
+        body: dataJson._body || dataJson.body,
         status: dataJson.status,
         headers: dataJson.headers,
         statusText: dataJson.statusText,
-        type: dataJson.type,
         url: dataJson.url
-      });
-      return new Response(requestOptions);
-    } else {
-      return dataJson;
+      };
+
+      if (CacheService.responseOptions) {
+        response.type = dataJson.type;
+        response = new CacheService.responseOptions(response);
+      }
+
+      return new CacheService.response(response);
     }
+
+    return dataJson;
   }
 
   /**
@@ -248,17 +332,32 @@ export class CacheService {
    * @param {number} [ttl] - TTL in seconds
    * @return {Observable<any>} - data from cache or origin observable
    */
-  loadFromObservable(key: string, observable: any, groupKey?: string, ttl?: number): Observable<any> {
+  loadFromObservable<T = any>(
+    key: string,
+    observable: any,
+    groupKey?: string,
+    ttl?: number
+  ): Observable<T> {
     if (!this.cacheEnabled) return observable;
-    observable = observable.share();
-    return Observable.fromPromise(this.getItem(key))
-      .catch((e) => {
-        observable.subscribe(
-          res => this.saveItem(key, res, groupKey, ttl),
-          error => Observable.throw(error)
-        );
-        return observable;
-      });
+
+    observable = observable.pipe(share());
+
+    return defer(() => {
+      return fromPromise(this.getItem(key)).pipe(
+        catchError(e => {
+          observable.subscribe(
+            res => {
+              return this.saveItem(key, res, groupKey, ttl);
+            },
+            error => {
+              return _throw(error);
+            }
+          );
+
+          return observable;
+        })
+      );
+    });
   }
 
   /**
@@ -270,35 +369,46 @@ export class CacheService {
    * @param {string} [delayType='expired']
    * @return {Observable<any>} - data from cache or origin observable
    */
-  loadFromDelayedObservable(key: string, observable: any, groupKey?: string, ttl: number = this.ttl, delayType: string = 'expired'): Observable<any> {
+  loadFromDelayedObservable<T = any>(
+    key: string,
+    observable: Observable<T>,
+    groupKey?: string,
+    ttl: number = this.ttl,
+    delayType: string = 'expired'
+  ): Observable<T> {
     if (!this.cacheEnabled) return observable;
 
-    const observableSubject = new Subject();
-    observable = observable.share();
+    const observableSubject = new Subject<T>();
+    observable = observable.pipe(share());
 
     const subscribeOrigin = () => {
-      observable.subscribe(res => {
-        this.saveItem(key, res, groupKey, ttl);
-        observableSubject.next(res);
-        observableSubject.complete();
-      },
-      (err) => {
-        observableSubject.error(err);
-      },
-      () => {
-        observableSubject.complete();
-      });
+      observable.subscribe(
+        res => {
+          this.saveItem(key, res, groupKey, ttl);
+          observableSubject.next(res);
+          observableSubject.complete();
+        },
+        err => {
+          observableSubject.error(err);
+        },
+        () => {
+          observableSubject.complete();
+        }
+      );
     };
 
-    this.getItem(key)
-      .then((data) => {
+    this.getItem<T>(key)
+      .then(data => {
         observableSubject.next(data);
+
         if (delayType === 'all') {
           subscribeOrigin();
+        } else {
+          observableSubject.complete();
         }
       })
-      .catch((e) => {
-        this.getRawItem(key)
+      .catch(e => {
+        this.getRawItem<T>(key)
           .then(res => {
             observableSubject.next(CacheService.decodeRawData(res, this.encryptionKey));
             subscribeOrigin();
@@ -315,7 +425,7 @@ export class CacheService {
    */
   clearAll(): Promise<any> {
     if (!this.cacheEnabled) {
-      return Promise.reject(MESSAGES[2]);
+      throw new Error(MESSAGES[2]);
     }
 
     return this.resetDatabase();
@@ -326,22 +436,23 @@ export class CacheService {
    * @param {boolean} ignoreOnlineStatus -
    * @return {Promise<any>} - query promise
    */
-  clearExpired(ignoreOnlineStatus = false): Promise<any> {
+  async clearExpired(ignoreOnlineStatus = false): Promise<any> {
     if (!this.cacheEnabled) {
-      return Promise.reject(MESSAGES[2]);
+      throw new Error(MESSAGES[2]);
     }
 
     if (!this.isOnline() && !ignoreOnlineStatus) {
-      return Promise.reject(MESSAGES[4]);
+      throw new Error(MESSAGES[4]);
     }
 
+    let items = await this._storage.all();
     let datetime = new Date().getTime();
-    let promises: Promise<any>[] = [];
-    this._storage.forEach((val: any, key: string) => {
-      if (val && val.expires < datetime) promises.push(this.removeItem(key));
-    });
 
-    return Promise.all(promises);
+    return Promise.all(
+      items
+      .filter(item => item.expires < datetime)
+      .map(item => this.removeItem(item.key))
+    );
   }
 
   /**
@@ -351,13 +462,16 @@ export class CacheService {
    */
   async clearGroup(groupKey: string): Promise<any> {
     if (!this.cacheEnabled) {
-      return Promise.reject(MESSAGES[2]);
+      throw new Error(MESSAGES[2]);
     }
-    let promises: Promise<any>[] = [];
-    await this._storage.forEach((val: any, key: string) => {
-      if (val && val.groupKey === groupKey) promises.push(this.removeItem(key));
-    });
-    return Promise.all(promises);
+
+    let items = await this._storage.all();
+
+    return Promise.all(
+      items
+      .filter(item => item.groupKey === groupKey)
+      .map(item => this.removeItem(item.key))
+    );
   }
 
   /**
@@ -366,17 +480,23 @@ export class CacheService {
    * @return {boolean} - data from cache
    */
   static isRequest(data: any): boolean {
-    return (
-      data && (
-        data instanceof Request ||
-        (
-          typeof data === 'object' && data.hasOwnProperty('_body') && data.hasOwnProperty('status') &&
-          data.hasOwnProperty('statusText') &&
-          data.hasOwnProperty('type') &&
-          data.hasOwnProperty('headers') &&
-          data.hasOwnProperty('url')
-        )
-      )
-    );
+    let orCondition =
+      data &&
+      typeof data === 'object' &&
+      data.hasOwnProperty('status') &&
+      data.hasOwnProperty('statusText') &&
+      data.hasOwnProperty('headers') &&
+      data.hasOwnProperty('url');
+
+    if (CacheService.httpDeprecated) {
+      orCondition =
+        orCondition &&
+        data.hasOwnProperty('type') &&
+        data.hasOwnProperty('_body');
+    } else {
+      orCondition = orCondition && data.hasOwnProperty('body');
+    }
+
+    return data && ((CacheService.request && data instanceof CacheService.request) || orCondition);
   }
 }
