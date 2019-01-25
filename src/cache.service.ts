@@ -353,6 +353,7 @@ export class CacheService {
    * @param {string} [groupKey] - group key
    * @param {number} [ttl] - TTL in seconds
    * @param {string} [delayType='expired']
+   * @param {string} [metaKey] - property on T to which to assign meta data
    * @return {Observable<any>} - data from cache or origin observable
    */
   loadFromDelayedObservable<T = any>(
@@ -360,7 +361,8 @@ export class CacheService {
     observable: Observable<T>,
     groupKey?: string,
     ttl: number = this.ttl,
-    delayType: string = 'expired'
+    delayType: string = 'expired',
+    metaKey?: string
   ): Observable<T> {
     if (!this.cacheEnabled) return observable;
 
@@ -385,6 +387,10 @@ export class CacheService {
 
     this.getItem<T>(key)
       .then(data => {
+        if (metaKey) {
+          data[metaKey] = data[metaKey] || {};
+          data[metaKey].fromCache = true;
+        }
         observableSubject.next(data);
 
         if (delayType === 'all') {
@@ -396,7 +402,12 @@ export class CacheService {
       .catch(e => {
         this.getRawItem<T>(key)
           .then(res => {
-            observableSubject.next(CacheService.decodeRawData(res));
+            let result = CacheService.decodeRawData(res);
+            if (metaKey) {
+              result[metaKey] = result[metaKey] || {};
+              result[metaKey].fromCache = true;
+            }
+            observableSubject.next(result);
             subscribeOrigin();
           })
           .catch(() => subscribeOrigin());

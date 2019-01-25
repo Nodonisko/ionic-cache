@@ -13,7 +13,8 @@
     "test:watch": "karma start karma.conf.js",
     "build": "rimraf dist && ngc",
     "lint": "tslint \"src/**/*.ts\"",
-    "prepublishOnly": "npm run lint && npm run build"
+    "prepublishOnly": "npm run lint && npm run build",
+    "prepare": "npm run build"
   },
   "repository": {
     "type": "git",
