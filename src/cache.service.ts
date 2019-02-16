@@ -1,14 +1,7 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs/Observable';
-import { Subject } from 'rxjs/Subject';
-import { fromPromise } from 'rxjs/observable/fromPromise';
-import { _throw } from 'rxjs/observable/throw';
-import { fromEvent } from 'rxjs/observable/fromEvent';
-import { merge } from 'rxjs/observable/merge';
-import { share } from 'rxjs/operators/share';
-import { map } from 'rxjs/operators/map';
-import { catchError } from 'rxjs/operators/catchError';
-import { defer } from 'rxjs/observable/defer';
+import { Observable, Subject } from 'rxjs';
+import { defer, from, fromEvent, merge, throwError } from 'rxjs';
+import { share, map, catchError } from 'rxjs/operators';
 import { CacheStorageService, StorageCacheItem } from './cache-storage';
 
 export interface CacheConfig {
@@ -329,14 +322,14 @@ export class CacheService {
     observable = observable.pipe(share());
 
     return defer(() => {
-      return fromPromise(this.getItem(key)).pipe(
+      return from(this.getItem(key)).pipe(
         catchError(e => {
           observable.subscribe(
             res => {
               return this.saveItem(key, res, groupKey, ttl);
             },
             error => {
-              return _throw(error);
+              return throwError(error);
             }
           );
 
