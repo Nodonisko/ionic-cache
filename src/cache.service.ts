@@ -18,6 +18,7 @@ export const MESSAGES = {
 
 export type CacheValueFactory<T> = () => Promise<T>;
 
+// @dynamic
 @Injectable()
 export class CacheService {
   private ttl: number = 60 * 60; // one hour
