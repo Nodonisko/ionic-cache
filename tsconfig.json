@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "rootDir": "src",
     "module": "esnext",
     "target": "es5",
     "moduleResolution": "node",
@@ -23,7 +24,7 @@
   ],
   "angularCompilerOptions": {
     "fullTemplateTypeCheck": true,
-    "strictMetadataEmit": false,
+    "strictMetadataEmit": true,
     "skipTemplateCodegen": true,
     "debug": false
   }
