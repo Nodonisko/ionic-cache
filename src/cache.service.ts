@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { HttpRequest, HttpResponse } from '@angular/common/http';
 import { Observable, Subject } from 'rxjs';
 import { defer, from, fromEvent, merge, throwError } from 'rxjs';
 import { share, map, catchError } from 'rxjs/operators';
@@ -18,7 +19,6 @@ export const MESSAGES = {
 
 export type CacheValueFactory<T> = () => Promise<T>;
 
-// @dynamic
 @Injectable()
 export class CacheService {
   private ttl: number = 60 * 60; // one hour
@@ -26,15 +26,11 @@ export class CacheService {
   private invalidateOffline: boolean = false;
   private networkStatusChanges: Observable<boolean>;
   private networkStatus: boolean = true;
-  static request: any;
-  static response: any;
-  static responseOptions: any;
   static httpDeprecated: boolean = false;
 
   constructor(
     private _storage: CacheStorageService
   ) {
-    this.loadHttp();
     this.watchNetworkInit();
     this.loadCache();
   }
@@ -47,24 +43,6 @@ export class CacheService {
       this.cacheEnabled = false;
       console.error(MESSAGES[0], e);
     }
-  }
-
-  private async loadHttp() {
-    if (CacheService.request && CacheService.response) {
-      return;
-    }
-
-    let http;
-    // try load @angular/http deprecated or @angular/common/http
-    try {
-      http = await import('@angular/http');
-      CacheService.httpDeprecated = true;
-    } catch (e) {
-      http = await import('@angular/common/http');
-    }
-    CacheService.request = http.Request || http.HttpRequest;
-    CacheService.response = http.Response || http.HttpResponse;
-    CacheService.responseOptions = http.ResponseOptions;
   }
 
   async ready(): Promise<any> {
@@ -293,12 +271,7 @@ export class CacheService {
         url: dataJson.url
       };
 
-      if (CacheService.responseOptions) {
-        response.type = dataJson.type;
-        response = new CacheService.responseOptions(response);
-      }
-
-      return new CacheService.response(response);
+      return new HttpResponse(response);
     }
 
     return dataJson;
@@ -477,17 +450,9 @@ export class CacheService {
       data.hasOwnProperty('status') &&
       data.hasOwnProperty('statusText') &&
       data.hasOwnProperty('headers') &&
-      data.hasOwnProperty('url');
+      data.hasOwnProperty('url') &&
+      data.hasOwnProperty('body');
 
-    if (CacheService.httpDeprecated) {
-      orCondition =
-        orCondition &&
-        data.hasOwnProperty('type') &&
-        data.hasOwnProperty('_body');
-    } else {
-      orCondition = orCondition && data.hasOwnProperty('body');
-    }
-
-    return data && ((CacheService.request && data instanceof CacheService.request) || orCondition);
+    return data && (data instanceof HttpRequest || orCondition);
   }
 }
