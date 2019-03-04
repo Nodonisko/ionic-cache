@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpRequest, HttpResponse } from '@angular/common/http';
+import { HttpResponse } from '@angular/common/http';
 import { Observable, Subject } from 'rxjs';
 import { defer, from, fromEvent, merge, throwError } from 'rxjs';
 import { share, map, catchError } from 'rxjs/operators';
@@ -18,6 +18,24 @@ export const MESSAGES = {
 };
 
 export type CacheValueFactory<T> = () => Promise<T>;
+
+/**
+ * @description Check if it's an HttpResponse
+ * @param {any} data - Variable to test
+ * @return {boolean} - data from cache
+ */
+function isHttpResponse(data: any): boolean {
+  let orCondition =
+    data &&
+    typeof data === 'object' &&
+    data.hasOwnProperty('status') &&
+    data.hasOwnProperty('statusText') &&
+    data.hasOwnProperty('headers') &&
+    data.hasOwnProperty('url') &&
+    data.hasOwnProperty('body');
+
+  return data && (data instanceof HttpResponse || orCondition);
+}
 
 @Injectable()
 export class CacheService {
@@ -135,7 +153,7 @@ export class CacheService {
     }
 
     const expires = new Date().getTime() + ttl * 1000,
-      type = CacheService.isRequest(data) ? 'request' : typeof data,
+      type = isHttpResponse(data) ? 'response' : typeof data,
       value = JSON.stringify(data);
 
     return this._storage.set(key, {
@@ -262,7 +280,7 @@ export class CacheService {
    */
   static decodeRawData(data: StorageCacheItem): any {
     let dataJson = JSON.parse(data.value);
-    if (CacheService.isRequest(dataJson)) {
+    if (isHttpResponse(dataJson)) {
       let response: any = {
         body: dataJson._body || dataJson.body,
         status: dataJson.status,
@@ -436,23 +454,5 @@ export class CacheService {
       .filter(item => item.groupKey === groupKey)
       .map(item => this.removeItem(item.key))
     );
-  }
-
-  /**
-   * @description Check if it's an request
-   * @param {any} data - Variable to test
-   * @return {boolean} - data from cache
-   */
-  static isRequest(data: any): boolean {
-    let orCondition =
-      data &&
-      typeof data === 'object' &&
-      data.hasOwnProperty('status') &&
-      data.hasOwnProperty('statusText') &&
-      data.hasOwnProperty('headers') &&
-      data.hasOwnProperty('url') &&
-      data.hasOwnProperty('body');
-
-    return data && (data instanceof HttpRequest || orCondition);
   }
 }
