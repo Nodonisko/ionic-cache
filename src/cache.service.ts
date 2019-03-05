@@ -24,7 +24,7 @@ export type CacheValueFactory<T> = () => Promise<T>;
  * @param {any} data - Variable to test
  * @return {boolean} - data from cache
  */
-function isHttpResponse(data: any): boolean {
+const isHttpResponse = (data: any): boolean => {
   let orCondition =
     data &&
     typeof data === 'object' &&
