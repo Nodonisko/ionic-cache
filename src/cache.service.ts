@@ -44,7 +44,6 @@ export class CacheService {
   private invalidateOffline: boolean = false;
   private networkStatusChanges: Observable<boolean>;
   private networkStatus: boolean = true;
-  static httpDeprecated: boolean = false;
 
   constructor(
     private _storage: CacheStorageService
