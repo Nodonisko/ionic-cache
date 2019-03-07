@@ -35,7 +35,7 @@ const isHttpResponse = (data: any): boolean => {
     data.hasOwnProperty('body');
 
   return data && (data.constructor === HttpResponse || orCondition);
-}
+};
 
 @Injectable()
 export class CacheService {
