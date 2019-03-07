@@ -34,7 +34,7 @@ const isHttpResponse = (data: any): boolean => {
     data.hasOwnProperty('url') &&
     data.hasOwnProperty('body');
 
-  return data && (data.constructor === HttpResponse || orCondition);
+  return data && (data instanceof HttpResponse || orCondition);
 };
 
 @Injectable()
