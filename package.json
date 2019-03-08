@@ -63,8 +63,5 @@
   },
   "peerDependencies": {
     "@ionic/storage": "^2.1.3"
-  },
-  "browser": {
-    "@angular/common/http": false
   }
 }
