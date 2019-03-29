@@ -3,7 +3,7 @@ import { HttpResponse } from '@angular/common/http';
 import { Observable, Subject, Subscription } from 'rxjs';
 import { defer, from, fromEvent, merge, throwError } from 'rxjs';
 import { share, map, catchError, finalize } from 'rxjs/operators';
-  import { CacheStorageService, StorageCacheItem } from './cache-storage';
+import { CacheStorageService, StorageCacheItem } from './cache-storage';
 
 export interface CacheConfig {
   keyPrefix?: string;
@@ -33,7 +33,6 @@ const isHttpResponse = (data: any): boolean => {
     data.hasOwnProperty('headers') &&
     data.hasOwnProperty('url') &&
     data.hasOwnProperty('body');
-  
   return data && (data instanceof HttpResponse || orCondition);
 };
 
