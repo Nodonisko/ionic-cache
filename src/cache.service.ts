@@ -1,14 +1,8 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs/Observable';
-import { Subject } from 'rxjs/Subject';
-import { fromPromise } from 'rxjs/observable/fromPromise';
-import { _throw } from 'rxjs/observable/throw';
-import { fromEvent } from 'rxjs/observable/fromEvent';
-import { merge } from 'rxjs/observable/merge';
-import { share } from 'rxjs/operators/share';
-import { map } from 'rxjs/operators/map';
-import { catchError } from 'rxjs/operators/catchError';
-import { defer } from 'rxjs/observable/defer';
+import { HttpResponse } from '@angular/common/http';
+import { Observable, Subject } from 'rxjs';
+import { defer, from, fromEvent, merge, throwError } from 'rxjs';
+import { share, map, catchError } from 'rxjs/operators';
 import { CacheStorageService, StorageCacheItem } from './cache-storage';
 
 import * as CryptoJS from 'crypto-js';
@@ -27,6 +21,24 @@ export const MESSAGES = {
 
 export type CacheValueFactory<T> = () => Promise<T>;
 
+/**
+ * @description Check if it's an HttpResponse
+ * @param {any} data - Variable to test
+ * @return {boolean} - data from cache
+ */
+const isHttpResponse = (data: any): boolean => {
+  let orCondition =
+    data &&
+    typeof data === 'object' &&
+    data.hasOwnProperty('status') &&
+    data.hasOwnProperty('statusText') &&
+    data.hasOwnProperty('headers') &&
+    data.hasOwnProperty('url') &&
+    data.hasOwnProperty('body');
+
+  return data && (data instanceof HttpResponse || orCondition);
+};
+
 @Injectable()
 export class CacheService {
   private ttl: number = 60 * 60; // one hour
@@ -35,15 +47,10 @@ export class CacheService {
   private networkStatusChanges: Observable<boolean>;
   private networkStatus: boolean = true;
   private encryptionKey: string;
-  static request: any;
-  static response: any;
-  static responseOptions: any;
-  static httpDeprecated: boolean = false;
 
   constructor(
     private _storage: CacheStorageService
   ) {
-    this.loadHttp();
     this.watchNetworkInit();
     this.loadCache();
   }
@@ -56,24 +63,6 @@ export class CacheService {
       this.cacheEnabled = false;
       console.error(MESSAGES[0], e);
     }
-  }
-
-  private async loadHttp() {
-    if (CacheService.request && CacheService.response) {
-      return;
-    }
-
-    let http;
-    // try load @angular/http deprecated or @angular/common/http
-    try {
-      http = await import('@angular/http');
-      CacheService.httpDeprecated = true;
-    } catch (e) {
-      http = await import('@angular/common/http');
-    }
-    CacheService.request = http.Request || http.HttpRequest;
-    CacheService.response = http.Response || http.HttpResponse;
-    CacheService.responseOptions = http.ResponseOptions;
   }
 
   async ready(): Promise<any> {
@@ -175,8 +164,8 @@ export class CacheService {
     }
 
     const expires = new Date().getTime() + ttl * 1000,
-      type = CacheService.isRequest(data) ? 'request' : typeof data,
-      // value = JSON.stringify(data);
+
+      type = isHttpResponse(data) ? 'response' : typeof data,
       value = this.encryptionKey ? CryptoJS.AES.encrypt(JSON.stringify(data), this.encryptionKey).toString() : JSON.stringify(data);
 
     return this._storage.set(key, {
@@ -302,9 +291,8 @@ export class CacheService {
    * @return {any} - decoded data
    */
   static decodeRawData(data: StorageCacheItem, encryptionKey?: string): any {
-    // let dataJson = JSON.parse(data.value);
     let dataJson = JSON.parse( encryptionKey ? CryptoJS.AES.decrypt(data.value, encryptionKey).toString(CryptoJS.enc.Utf8) : data.value);
-    if (CacheService.isRequest(dataJson)) {
+    if (isHttpResponse(dataJson)) {
       let response: any = {
         body: dataJson._body || dataJson.body,
         status: dataJson.status,
@@ -313,12 +301,7 @@ export class CacheService {
         url: dataJson.url
       };
 
-      if (CacheService.responseOptions) {
-        response.type = dataJson.type;
-        response = new CacheService.responseOptions(response);
-      }
-
-      return new CacheService.response(response);
+      return new HttpResponse(response);
     }
 
     return dataJson;
@@ -343,14 +326,14 @@ export class CacheService {
     observable = observable.pipe(share());
 
     return defer(() => {
-      return fromPromise(this.getItem(key)).pipe(
+      return from(this.getItem(key)).pipe(
         catchError(e => {
           observable.subscribe(
             res => {
               return this.saveItem(key, res, groupKey, ttl);
             },
             error => {
-              return _throw(error);
+              return throwError(error);
             }
           );
 
@@ -367,6 +350,7 @@ export class CacheService {
    * @param {string} [groupKey] - group key
    * @param {number} [ttl] - TTL in seconds
    * @param {string} [delayType='expired']
+   * @param {string} [metaKey] - property on T to which to assign meta data
    * @return {Observable<any>} - data from cache or origin observable
    */
   loadFromDelayedObservable<T = any>(
@@ -374,7 +358,8 @@ export class CacheService {
     observable: Observable<T>,
     groupKey?: string,
     ttl: number = this.ttl,
-    delayType: string = 'expired'
+    delayType: string = 'expired',
+    metaKey?: string
   ): Observable<T> {
     if (!this.cacheEnabled) return observable;
 
@@ -399,6 +384,10 @@ export class CacheService {
 
     this.getItem<T>(key)
       .then(data => {
+        if (metaKey) {
+          data[metaKey] = data[metaKey] || {};
+          data[metaKey].fromCache = true;
+        }
         observableSubject.next(data);
 
         if (delayType === 'all') {
@@ -410,7 +399,12 @@ export class CacheService {
       .catch(e => {
         this.getRawItem<T>(key)
           .then(res => {
-            observableSubject.next(CacheService.decodeRawData(res, this.encryptionKey));
+            let result = CacheService.decodeRawData(res, this.encryptionKey);
+            if (metaKey) {
+              result[metaKey] = result[metaKey] || {};
+              result[metaKey].fromCache = true;
+            }
+            observableSubject.next(result);
             subscribeOrigin();
           })
           .catch(() => subscribeOrigin());
@@ -472,31 +466,5 @@ export class CacheService {
       .filter(item => item.groupKey === groupKey)
       .map(item => this.removeItem(item.key))
     );
-  }
-
-  /**
-   * @description Check if it's an request
-   * @param {any} data - Variable to test
-   * @return {boolean} - data from cache
-   */
-  static isRequest(data: any): boolean {
-    let orCondition =
-      data &&
-      typeof data === 'object' &&
-      data.hasOwnProperty('status') &&
-      data.hasOwnProperty('statusText') &&
-      data.hasOwnProperty('headers') &&
-      data.hasOwnProperty('url');
-
-    if (CacheService.httpDeprecated) {
-      orCondition =
-        orCondition &&
-        data.hasOwnProperty('type') &&
-        data.hasOwnProperty('_body');
-    } else {
-      orCondition = orCondition && data.hasOwnProperty('body');
-    }
-
-    return data && ((CacheService.request && data instanceof CacheService.request) || orCondition);
   }
 }
