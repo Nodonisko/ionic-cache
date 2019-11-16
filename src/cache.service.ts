@@ -5,6 +5,8 @@ import { defer, from, fromEvent, merge, throwError } from 'rxjs';
 import { share, map, catchError } from 'rxjs/operators';
 import { CacheStorageService, StorageCacheItem } from './cache-storage';
 
+import * as CryptoJS from 'crypto-js';
+
 export interface CacheConfig {
   keyPrefix?: string;
 }
@@ -44,6 +46,7 @@ export class CacheService {
   private invalidateOffline: boolean = false;
   private networkStatusChanges: Observable<boolean>;
   private networkStatus: boolean = true;
+  private encryptionKey: string;
 
   constructor(
     private _storage: CacheStorageService
@@ -94,6 +97,15 @@ export class CacheService {
   setDefaultTTL(ttl: number): number {
     return (this.ttl = ttl);
   }
+
+  /**
+     * @description Set AES encryption key
+     * @author Prasad Sambodhi (nisostech.com)
+     * @param {string} key encryption key
+     */
+    setEncryptionKey(key: string) {
+      this.encryptionKey = key;
+    }
 
   /**
    * @description Set if expired cache should be invalidated if device is offline
@@ -152,8 +164,9 @@ export class CacheService {
     }
 
     const expires = new Date().getTime() + ttl * 1000,
+
       type = isHttpResponse(data) ? 'response' : typeof data,
-      value = JSON.stringify(data);
+      value = this.encryptionKey ? CryptoJS.AES.encrypt(JSON.stringify(data), this.encryptionKey).toString() : JSON.stringify(data);
 
     return this._storage.set(key, {
       value,
@@ -251,7 +264,7 @@ export class CacheService {
       throw new Error(MESSAGES[2] + key);
     }
 
-    return CacheService.decodeRawData(data);
+    return CacheService.decodeRawData(data, this.encryptionKey);
   }
 
   async getOrSetItem<T>(
@@ -277,8 +290,8 @@ export class CacheService {
    * @param {any} data - Data
    * @return {any} - decoded data
    */
-  static decodeRawData(data: StorageCacheItem): any {
-    let dataJson = JSON.parse(data.value);
+  static decodeRawData(data: StorageCacheItem, encryptionKey?: string): any {
+    let dataJson = JSON.parse( encryptionKey ? CryptoJS.AES.decrypt(data.value, encryptionKey).toString(CryptoJS.enc.Utf8) : data.value);
     if (isHttpResponse(dataJson)) {
       let response: any = {
         body: dataJson._body || dataJson.body,
@@ -386,7 +399,7 @@ export class CacheService {
       .catch(e => {
         this.getRawItem<T>(key)
           .then(res => {
-            let result = CacheService.decodeRawData(res);
+            let result = CacheService.decodeRawData(res, this.encryptionKey);
             if (metaKey) {
               result[metaKey] = result[metaKey] || {};
               result[metaKey].fromCache = true;
