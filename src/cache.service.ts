@@ -166,7 +166,7 @@ export class CacheService {
   /**
    * @description Save blob item to cache
    * @param {string} key - Unique key
-   * @param {any} data - Data to store
+   * @param {any} blob - Blob to store
    * @param {string} [groupKey] - group key
    * @param {number} [ttl] - TTL in seconds
    * @return {Promise<any>} - saved data
@@ -488,7 +488,7 @@ export class CacheService {
   /**
    * @description Load blob item from cache if it's in cache or load from origin observable
    * @param {string} key - Unique key
-   * @param {any} observable - Observable with data
+   * @param {any} observable - Observable with blob data
    * @param {string} [groupKey] - group key
    * @param {number} [ttl] - TTL in seconds
    * @return {Observable<any>} - blob data from cache or origin observable
