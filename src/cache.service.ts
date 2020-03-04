@@ -370,7 +370,7 @@ export class CacheService {
    * @param {any} data - Data
    * @return {Promise<Blob>} - promise that resolves with a Blob.
    */
-  static async decodeRawBlobData(data: StorageCacheItem): Promise<Blob> {
+  static async decodeRawBlobData(data: StorageCacheItem): Promise<any> {
     const dataURL = JSON.parse(data.value);
 
     // Technique derived from: https://stackoverflow.com/a/36183085
