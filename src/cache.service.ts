@@ -311,7 +311,7 @@ export class CacheService {
    * @param {string} key - Unique key
    * @return {Promise<any>} - promise that resolves with blob data from cache
    */
-  async getBlobItem<T = any>(key: string): Promise<T> {
+  async getBlobItem(key: string): Promise<Blob> {
     if (!this.cacheEnabled) {
       throw new Error(MESSAGES[1]);
     }
@@ -370,7 +370,7 @@ export class CacheService {
    * @param {any} data - Data
    * @return {Promise<Blob>} - promise that resolves with a Blob.
    */
-  static async decodeRawBlobData(data: StorageCacheItem): Promise<any> {
+  static async decodeRawBlobData(data: StorageCacheItem): Promise<Blob> {
     const dataURL = JSON.parse(data.value);
 
     // Technique derived from: https://stackoverflow.com/a/36183085
@@ -493,12 +493,12 @@ export class CacheService {
    * @param {number} [ttl] - TTL in seconds
    * @return {Observable<any>} - blob data from cache or origin observable
    */
-  loadFromBlobObservable<T = any>(
+  loadFromBlobObservable(
     key: string,
-    observable: any,
+    observable: Observable<Blob>,
     groupKey?: string,
     ttl?: number
-  ): Observable<T> {
+  ): Observable<Blob> {
     if (!this.cacheEnabled) return observable;
 
     observable = observable.pipe(share());
