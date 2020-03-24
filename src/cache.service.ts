@@ -194,7 +194,7 @@ export class CacheService {
         type,
         groupKey
       });
-    } catch(error) {
+    } catch (error) {
       throw new Error(error);
     }
   }
@@ -203,7 +203,7 @@ export class CacheService {
   private asBase64(blob): Promise<string> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.readAsDataURL(blob); 
+      reader.readAsDataURL(blob);
       reader.onloadend = () => {
         const base64data = reader.result;
         resolve(base64data);
