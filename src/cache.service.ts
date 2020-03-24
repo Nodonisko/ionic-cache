@@ -164,6 +164,58 @@ export class CacheService {
   }
 
   /**
+   * @description Save blob item to cache
+   * @param {string} key - Unique key
+   * @param {any} blob - Blob to store
+   * @param {string} [groupKey] - group key
+   * @param {number} [ttl] - TTL in seconds
+   * @return {Promise<any>} - saved data
+   */
+  async saveBlobItem(
+    key: string,
+    blob: any,
+    groupKey: string = 'none',
+    ttl: number = this.ttl
+  ): Promise<any> {
+    if (!this.cacheEnabled) {
+      throw new Error(MESSAGES[1]);
+    }
+
+    const expires = new Date().getTime() + ttl * 1000,
+      type = blob.type;
+
+    try {
+      const base64data = await this.asBase64(blob);
+      const value = JSON.stringify(base64data);
+
+      return this._storage.set(key, {
+        value,
+        expires,
+        type,
+        groupKey
+      });
+    } catch(error) {
+      throw new Error(error);
+    }
+  }
+
+  // Technique derived from: https://stackoverflow.com/a/18650249
+  private asBase64(blob): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(blob); 
+      reader.onloadend = () => {
+        const base64data = reader.result;
+        resolve(base64data);
+      };
+      reader.onerror = (event) => {
+        reject(event);
+        reader.abort();
+      };
+    });
+  }
+
+  /**
    * @description Delete item from cache
    * @param {string} key - Unique key
    * @return {Promise<any>} - query execution promise
@@ -254,6 +306,25 @@ export class CacheService {
     return CacheService.decodeRawData(data);
   }
 
+  /**
+   * @description Get blob item from cache with expire check and correct type assign
+   * @param {string} key - Unique key
+   * @return {Promise<any>} - promise that resolves with blob data from cache
+   */
+  async getBlobItem(key: string): Promise<Blob> {
+    if (!this.cacheEnabled) {
+      throw new Error(MESSAGES[1]);
+    }
+
+    let data = await this.getRawItem(key);
+
+    if (data.expires < new Date().getTime() && (this.invalidateOffline || this.isOnline())) {
+      throw new Error(MESSAGES[2] + key);
+    }
+
+    return CacheService.decodeRawBlobData(data);
+  }
+
   async getOrSetItem<T>(
     key: string,
     factory: CacheValueFactory<T>,
@@ -292,6 +363,20 @@ export class CacheService {
     }
 
     return dataJson;
+  }
+
+  /**
+   * @description Decode raw blob data from DB
+   * @param {any} data - Data
+   * @return {Promise<Blob>} - promise that resolves with a Blob.
+   */
+  static async decodeRawBlobData(data: StorageCacheItem): Promise<Blob> {
+    const dataURL = JSON.parse(data.value);
+
+    // Technique derived from: https://stackoverflow.com/a/36183085
+    const response = await fetch(dataURL);
+
+    return response.blob();
   }
 
   /**
@@ -398,6 +483,42 @@ export class CacheService {
       });
 
     return observableSubject.asObservable();
+  }
+
+  /**
+   * @description Load blob item from cache if it's in cache or load from origin observable
+   * @param {string} key - Unique key
+   * @param {any} observable - Observable with blob data
+   * @param {string} [groupKey] - group key
+   * @param {number} [ttl] - TTL in seconds
+   * @return {Observable<any>} - blob data from cache or origin observable
+   */
+  loadFromBlobObservable(
+    key: string,
+    observable: Observable<Blob>,
+    groupKey?: string,
+    ttl?: number
+  ): Observable<Blob> {
+    if (!this.cacheEnabled) return observable;
+
+    observable = observable.pipe(share());
+
+    return defer(() => {
+      return from(this.getBlobItem(key)).pipe(
+        catchError(e => {
+          observable.subscribe(
+            blob => {
+              return this.saveBlobItem(key, blob, groupKey, ttl);
+            },
+            error => {
+              return throwError(error);
+            }
+          );
+
+          return observable;
+        })
+      );
+    });
   }
 
   /**
