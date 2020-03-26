@@ -576,7 +576,7 @@ describe('Observable blob caching errors', () => {
   });
 
   it('should return data from observable (async)', (done: any) => {
-    service.loadFromBlobObservable(key, observableError).subscribe(
+    service.loadFromObservable(key, observableError).subscribe(
       res => {
         expect(true).toBeFalsy();
         done();
@@ -629,7 +629,7 @@ describe('Observable Blob Caching', () => {
   });
 
   it('should return blob data from observable (async)', (done: any) => {
-    service.loadFromBlobObservable(key, observable).subscribe(
+    service.loadFromObservable(key, observable).subscribe(
       async res => {
         expect(res).toBeDefined();
         expect(observable.subscribe).toHaveBeenCalled();
@@ -645,7 +645,7 @@ describe('Observable Blob Caching', () => {
   });
 
   it('should return cached observable blob data (async)', done => {
-    service.loadFromBlobObservable(key, observable).subscribe(res => {
+    service.loadFromObservable(key, observable).subscribe(res => {
       expect(observable.subscribe).not.toHaveBeenCalled();
       expect(res).toEqual(mockBlob);
       done();
