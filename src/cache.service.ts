@@ -168,6 +168,10 @@ export class CacheService {
       throw new Error(MESSAGES[1]);
     }
 
+    if (Blob.name === data.constructor.name) {
+      return this.saveBlobItem(key, data, groupKey, ttl);
+    }
+
     const expires = new Date().getTime() + ttl * 1000,
       type = isHttpResponse(data) ? 'response' : typeof data,
       value = JSON.stringify(data);
@@ -188,7 +192,7 @@ export class CacheService {
    * @param {number} [ttl] - TTL in seconds
    * @return {Promise<any>} - saved data
    */
-  async saveBlobItem(
+  private async saveBlobItem(
     key: string,
     blob: any,
     groupKey: string = 'none',
@@ -534,7 +538,7 @@ export class CacheService {
         catchError(e => {
           observable.subscribe(
             blob => {
-              return this.saveBlobItem(key, blob, groupKey, ttl);
+              return this.saveItem(key, blob, groupKey, ttl);
             },
             error => {
               return throwError(error);
