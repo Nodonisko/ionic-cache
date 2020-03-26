@@ -202,8 +202,6 @@ export class CacheService {
       throw new Error(MESSAGES[1]);
     }
 
-    console.log('saveBlobItem', blob.constructor.name, Blob.name, typeof blob);
-
     const expires = new Date().getTime() + ttl * 1000,
       type = blob.type;
 
@@ -329,25 +327,6 @@ export class CacheService {
     return CacheService.decodeRawData(data);
   }
 
-  /**
-   * @description Get blob item from cache with expire check and correct type assign
-   * @param {string} key - Unique key
-   * @return {Promise<any>} - promise that resolves with blob data from cache
-   */
-  async getBlobItem(key: string): Promise<Blob> {
-    if (!this.cacheEnabled) {
-      throw new Error(MESSAGES[1]);
-    }
-
-    let data = await this.getRawItem(key);
-
-    if (data.expires < new Date().getTime() && (this.invalidateOffline || this.isOnline())) {
-      throw new Error(MESSAGES[2] + key);
-    }
-
-    return CacheService.decodeRawData(data);
-  }
-
   async getOrSetItem<T>(
     key: string,
     factory: CacheValueFactory<T>,
@@ -393,20 +372,6 @@ export class CacheService {
 
       return response.blob();
     }
-  }
-
-  /**
-   * @description Decode raw blob data from DB
-   * @param {any} data - Data
-   * @return {Promise<Blob>} - promise that resolves with a Blob.
-   */
-  static async decodeRawBlobData(data: StorageCacheItem): Promise<Blob> {
-    const dataURL = JSON.parse(data.value);
-
-    // Technique derived from: https://stackoverflow.com/a/36183085
-    const response = await fetch(dataURL);
-
-    return response.blob();
   }
 
   /**
@@ -513,42 +478,6 @@ export class CacheService {
       });
 
     return observableSubject.asObservable();
-  }
-
-  /**
-   * @description Load blob item from cache if it's in cache or load from origin observable
-   * @param {string} key - Unique key
-   * @param {any} observable - Observable with blob data
-   * @param {string} [groupKey] - group key
-   * @param {number} [ttl] - TTL in seconds
-   * @return {Observable<any>} - blob data from cache or origin observable
-   */
-  loadFromBlobObservable(
-    key: string,
-    observable: Observable<Blob>,
-    groupKey?: string,
-    ttl?: number
-  ): Observable<Blob> {
-    if (!this.cacheEnabled) return observable;
-
-    observable = observable.pipe(share());
-
-    return defer(() => {
-      return from(this.getItem(key)).pipe(
-        catchError(e => {
-          observable.subscribe(
-            blob => {
-              return this.saveItem(key, blob, groupKey, ttl);
-            },
-            error => {
-              return throwError(error);
-            }
-          );
-
-          return observable;
-        })
-      );
-    });
   }
 
   /**
