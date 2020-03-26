@@ -530,7 +530,7 @@ export class CacheService {
     observable = observable.pipe(share());
 
     return defer(() => {
-      return from(this.getBlobItem(key)).pipe(
+      return from(this.getItem(key)).pipe(
         catchError(e => {
           observable.subscribe(
             blob => {
