@@ -102,7 +102,7 @@ describe('CacheService', () => {
       const response = await fetch(dataURL);
       const blob = await response.blob();
 
-      await service.saveBlobItem(blobKey, blob, groupKey, ttl);
+      await service.saveItem(blobKey, blob, groupKey, ttl);
       done();
     } catch (e) {
       expect(e).toBeUndefined();
