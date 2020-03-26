@@ -37,6 +37,23 @@ const isHttpResponse = (data: any): boolean => {
   return data && (data instanceof HttpResponse || orCondition);
 };
 
+const isJsOrResponseType = (data: any): boolean => {
+  const jsType =
+    data.type === 'undefined' ||
+    data.type === 'object' ||
+    data.type === 'boolean' ||
+    data.type === 'number' ||
+    data.type === 'bigint' ||
+    data.type === 'string' ||
+    data.type === 'symbol' ||
+    data.type === 'function';
+
+  const responseType =
+    data.type === 'response';
+
+  return responseType || jsType;
+}
+
 @Injectable()
 export class CacheService {
   private ttl: number = 60 * 60; // one hour
@@ -181,6 +198,8 @@ export class CacheService {
       throw new Error(MESSAGES[1]);
     }
 
+    console.log('saveBlobItem', blob.constructor.name, Blob.name, typeof blob);
+
     const expires = new Date().getTime() + ttl * 1000,
       type = blob.type;
 
@@ -322,7 +341,7 @@ export class CacheService {
       throw new Error(MESSAGES[2] + key);
     }
 
-    return CacheService.decodeRawBlobData(data);
+    return CacheService.decodeRawData(data);
   }
 
   async getOrSetItem<T>(
@@ -348,21 +367,28 @@ export class CacheService {
    * @param {any} data - Data
    * @return {any} - decoded data
    */
-  static decodeRawData(data: StorageCacheItem): any {
+  static async decodeRawData(data: StorageCacheItem): Promise<any> {
     let dataJson = JSON.parse(data.value);
-    if (isHttpResponse(dataJson)) {
-      let response: any = {
-        body: dataJson._body || dataJson.body,
-        status: dataJson.status,
-        headers: dataJson.headers,
-        statusText: dataJson.statusText,
-        url: dataJson.url
-      };
+    if (isJsOrResponseType(data)) {
+      if (isHttpResponse(dataJson)) {
+        let response: any = {
+          body: dataJson._body || dataJson.body,
+          status: dataJson.status,
+          headers: dataJson.headers,
+          statusText: dataJson.statusText,
+          url: dataJson.url
+        };
 
-      return new HttpResponse(response);
+        return new HttpResponse(response);
+      }
+
+      return dataJson;
+    } else {
+      // Technique derived from: https://stackoverflow.com/a/36183085
+      const response = await fetch(dataJson);
+
+      return response.blob();
     }
-
-    return dataJson;
   }
 
   /**
@@ -470,8 +496,8 @@ export class CacheService {
       })
       .catch(e => {
         this.getRawItem<T>(key)
-          .then(res => {
-            let result = CacheService.decodeRawData(res);
+          .then(async(res) => {
+            let result = await CacheService.decodeRawData(res);
             if (metaKey) {
               result[metaKey] = result[metaKey] || {};
               result[metaKey].fromCache = true;
