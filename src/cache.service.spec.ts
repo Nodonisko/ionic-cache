@@ -115,7 +115,7 @@ describe('CacheService', () => {
       const response = await fetch(dataURL);
       const blob = await response.blob();
 
-      let value = await service.getBlobItem(blobKey);
+      const value = await service.getItem(blobKey);
       expect(value).toEqual(blob);
       done();
     } catch (e) {
@@ -173,7 +173,7 @@ describe('CacheService', () => {
   it('should throw error because cache blob expired (async)', done => {
     setTimeout(async () => {
       try {
-        await service.getBlobItem(blobKey);
+        await service.getItem(blobKey);
 
         expect(false).toBeTruthy();
         done();
@@ -602,9 +602,9 @@ describe('Observable Blob Caching', () => {
 
   const delay = ms => new Promise(res => setTimeout(res, ms));
 
-  let mockBlob: Blob = new Blob(['Hello, world!'], {type: 'text/plain'});
+  const mockBlob: Blob = new Blob(['Hello, world!'], {type: 'text/plain'});
 
-  let observable = of(mockBlob);
+  const observable = of(mockBlob);
 
   let service: CacheService;
 
