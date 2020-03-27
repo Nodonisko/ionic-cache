@@ -37,6 +37,23 @@ const isHttpResponse = (data: any): boolean => {
   return data && (data instanceof HttpResponse || orCondition);
 };
 
+const isJsOrResponseType = (data: any): boolean => {
+  const jsType =
+    data.type === 'undefined' ||
+    data.type === 'object' ||
+    data.type === 'boolean' ||
+    data.type === 'number' ||
+    data.type === 'bigint' ||
+    data.type === 'string' ||
+    data.type === 'symbol' ||
+    data.type === 'function';
+
+  const responseType =
+    data.type === 'response';
+
+  return responseType || jsType;
+}
+
 @Injectable()
 export class CacheService {
   private ttl: number = 60 * 60; // one hour
@@ -151,6 +168,10 @@ export class CacheService {
       throw new Error(MESSAGES[1]);
     }
 
+    if (Blob.name === data.constructor.name) {
+      return this.saveBlobItem(key, data, groupKey, ttl);
+    }
+
     const expires = new Date().getTime() + ttl * 1000,
       type = isHttpResponse(data) ? 'response' : typeof data,
       value = JSON.stringify(data);
@@ -171,7 +192,7 @@ export class CacheService {
    * @param {number} [ttl] - TTL in seconds
    * @return {Promise<any>} - saved data
    */
-  async saveBlobItem(
+  private async saveBlobItem(
     key: string,
     blob: any,
     groupKey: string = 'none',
@@ -306,25 +327,6 @@ export class CacheService {
     return CacheService.decodeRawData(data);
   }
 
-  /**
-   * @description Get blob item from cache with expire check and correct type assign
-   * @param {string} key - Unique key
-   * @return {Promise<any>} - promise that resolves with blob data from cache
-   */
-  async getBlobItem(key: string): Promise<Blob> {
-    if (!this.cacheEnabled) {
-      throw new Error(MESSAGES[1]);
-    }
-
-    let data = await this.getRawItem(key);
-
-    if (data.expires < new Date().getTime() && (this.invalidateOffline || this.isOnline())) {
-      throw new Error(MESSAGES[2] + key);
-    }
-
-    return CacheService.decodeRawBlobData(data);
-  }
-
   async getOrSetItem<T>(
     key: string,
     factory: CacheValueFactory<T>,
@@ -348,35 +350,28 @@ export class CacheService {
    * @param {any} data - Data
    * @return {any} - decoded data
    */
-  static decodeRawData(data: StorageCacheItem): any {
+  static async decodeRawData(data: StorageCacheItem): Promise<any> {
     let dataJson = JSON.parse(data.value);
-    if (isHttpResponse(dataJson)) {
-      let response: any = {
-        body: dataJson._body || dataJson.body,
-        status: dataJson.status,
-        headers: dataJson.headers,
-        statusText: dataJson.statusText,
-        url: dataJson.url
-      };
+    if (isJsOrResponseType(data)) {
+      if (isHttpResponse(dataJson)) {
+        let response: any = {
+          body: dataJson._body || dataJson.body,
+          status: dataJson.status,
+          headers: dataJson.headers,
+          statusText: dataJson.statusText,
+          url: dataJson.url
+        };
 
-      return new HttpResponse(response);
+        return new HttpResponse(response);
+      }
+
+      return dataJson;
+    } else {
+      // Technique derived from: https://stackoverflow.com/a/36183085
+      const response = await fetch(dataJson);
+
+      return response.blob();
     }
-
-    return dataJson;
-  }
-
-  /**
-   * @description Decode raw blob data from DB
-   * @param {any} data - Data
-   * @return {Promise<Blob>} - promise that resolves with a Blob.
-   */
-  static async decodeRawBlobData(data: StorageCacheItem): Promise<Blob> {
-    const dataURL = JSON.parse(data.value);
-
-    // Technique derived from: https://stackoverflow.com/a/36183085
-    const response = await fetch(dataURL);
-
-    return response.blob();
   }
 
   /**
@@ -470,8 +465,8 @@ export class CacheService {
       })
       .catch(e => {
         this.getRawItem<T>(key)
-          .then(res => {
-            let result = CacheService.decodeRawData(res);
+          .then(async(res) => {
+            let result = await CacheService.decodeRawData(res);
             if (metaKey) {
               result[metaKey] = result[metaKey] || {};
               result[metaKey].fromCache = true;
@@ -483,42 +478,6 @@ export class CacheService {
       });
 
     return observableSubject.asObservable();
-  }
-
-  /**
-   * @description Load blob item from cache if it's in cache or load from origin observable
-   * @param {string} key - Unique key
-   * @param {any} observable - Observable with blob data
-   * @param {string} [groupKey] - group key
-   * @param {number} [ttl] - TTL in seconds
-   * @return {Observable<any>} - blob data from cache or origin observable
-   */
-  loadFromBlobObservable(
-    key: string,
-    observable: Observable<Blob>,
-    groupKey?: string,
-    ttl?: number
-  ): Observable<Blob> {
-    if (!this.cacheEnabled) return observable;
-
-    observable = observable.pipe(share());
-
-    return defer(() => {
-      return from(this.getBlobItem(key)).pipe(
-        catchError(e => {
-          observable.subscribe(
-            blob => {
-              return this.saveBlobItem(key, blob, groupKey, ttl);
-            },
-            error => {
-              return throwError(error);
-            }
-          );
-
-          return observable;
-        })
-      );
-    });
   }
 
   /**

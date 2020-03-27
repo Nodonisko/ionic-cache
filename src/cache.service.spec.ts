@@ -102,7 +102,7 @@ describe('CacheService', () => {
       const response = await fetch(dataURL);
       const blob = await response.blob();
 
-      await service.saveBlobItem(blobKey, blob, groupKey, ttl);
+      await service.saveItem(blobKey, blob, groupKey, ttl);
       done();
     } catch (e) {
       expect(e).toBeUndefined();
@@ -115,7 +115,7 @@ describe('CacheService', () => {
       const response = await fetch(dataURL);
       const blob = await response.blob();
 
-      let value = await service.getBlobItem(blobKey);
+      const value = await service.getItem(blobKey);
       expect(value).toEqual(blob);
       done();
     } catch (e) {
@@ -173,7 +173,7 @@ describe('CacheService', () => {
   it('should throw error because cache blob expired (async)', done => {
     setTimeout(async () => {
       try {
-        await service.getBlobItem(blobKey);
+        await service.getItem(blobKey);
 
         expect(false).toBeTruthy();
         done();
@@ -576,7 +576,7 @@ describe('Observable blob caching errors', () => {
   });
 
   it('should return data from observable (async)', (done: any) => {
-    service.loadFromBlobObservable(key, observableError).subscribe(
+    service.loadFromObservable(key, observableError).subscribe(
       res => {
         expect(true).toBeFalsy();
         done();
@@ -602,9 +602,9 @@ describe('Observable Blob Caching', () => {
 
   const delay = ms => new Promise(res => setTimeout(res, ms));
 
-  let mockBlob: Blob = new Blob(['Hello, world!'], {type: 'text/plain'});
+  const mockBlob: Blob = new Blob(['Hello, world!'], {type: 'text/plain'});
 
-  let observable = of(mockBlob);
+  const observable = of(mockBlob);
 
   let service: CacheService;
 
@@ -629,7 +629,7 @@ describe('Observable Blob Caching', () => {
   });
 
   it('should return blob data from observable (async)', (done: any) => {
-    service.loadFromBlobObservable(key, observable).subscribe(
+    service.loadFromObservable(key, observable).subscribe(
       async res => {
         expect(res).toBeDefined();
         expect(observable.subscribe).toHaveBeenCalled();
@@ -645,7 +645,7 @@ describe('Observable Blob Caching', () => {
   });
 
   it('should return cached observable blob data (async)', done => {
-    service.loadFromBlobObservable(key, observable).subscribe(res => {
+    service.loadFromObservable(key, observable).subscribe(res => {
       expect(observable.subscribe).not.toHaveBeenCalled();
       expect(res).toEqual(mockBlob);
       done();
