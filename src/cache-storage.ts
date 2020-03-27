@@ -9,11 +9,7 @@ export interface StorageCacheItem {
 }
 
 export class CacheStorageService {
-  constructor(
-    private storage: Storage,
-    private keyPrefix: string
-  ) {
-  }
+  constructor(private storage: Storage, private keyPrefix: string) {}
 
   public ready() {
     return this.storage.ready();

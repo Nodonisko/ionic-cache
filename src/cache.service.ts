@@ -14,7 +14,7 @@ export const MESSAGES = {
   1: 'Cache is not enabled.',
   2: 'Cache entry already expired: ',
   3: 'No such key: ',
-  4: 'No entries were deleted, because browser is offline.'
+  4: 'No entries were deleted, because browser is offline.',
 };
 
 export type CacheValueFactory<T> = () => Promise<T>;
@@ -48,11 +48,10 @@ const isJsOrResponseType = (data: any): boolean => {
     data.type === 'symbol' ||
     data.type === 'function';
 
-  const responseType =
-    data.type === 'response';
+  const responseType = data.type === 'response';
 
   return responseType || jsType;
-}
+};
 
 @Injectable()
 export class CacheService {
@@ -62,9 +61,7 @@ export class CacheService {
   private networkStatusChanges: Observable<boolean>;
   private networkStatus: boolean = true;
 
-  constructor(
-    private _storage: CacheStorageService
-  ) {
+  constructor(private _storage: CacheStorageService) {
     this.watchNetworkInit();
     this.loadCache();
   }
@@ -98,10 +95,7 @@ export class CacheService {
     await this.ready();
 
     let items = await this._storage.all();
-    return Promise.all(
-      items
-      .map(item => this.removeItem(item.key))
-    );
+    return Promise.all(items.map(item => this.removeItem(item.key)));
   }
 
   /**
@@ -180,7 +174,7 @@ export class CacheService {
       value,
       expires,
       type,
-      groupKey
+      groupKey,
     });
   }
 
@@ -213,7 +207,7 @@ export class CacheService {
         value,
         expires,
         type,
-        groupKey
+        groupKey,
       });
     } catch (error) {
       throw new Error(error);
@@ -229,7 +223,7 @@ export class CacheService {
         const base64data = reader.result;
         resolve(base64data);
       };
-      reader.onerror = (event) => {
+      reader.onerror = event => {
         reject(event);
         reader.abort();
       };
@@ -263,9 +257,9 @@ export class CacheService {
 
     return Promise.all(
       items
-      .map(item => item.key)
-      .filter(key => key && regex.test(key))
-      .map(key => this.removeItem(key))
+        .map(item => item.key)
+        .filter(key => key && regex.test(key))
+        .map(key => this.removeItem(key))
     );
   }
 
@@ -320,7 +314,10 @@ export class CacheService {
 
     let data = await this.getRawItem(key);
 
-    if (data.expires < new Date().getTime() && (this.invalidateOffline || this.isOnline())) {
+    if (
+      data.expires < new Date().getTime() &&
+      (this.invalidateOffline || this.isOnline())
+    ) {
       throw new Error(MESSAGES[2] + key);
     }
 
@@ -359,7 +356,7 @@ export class CacheService {
           status: dataJson.status,
           headers: dataJson.headers,
           statusText: dataJson.statusText,
-          url: dataJson.url
+          url: dataJson.url,
         };
 
         return new HttpResponse(response);
@@ -465,7 +462,7 @@ export class CacheService {
       })
       .catch(e => {
         this.getRawItem<T>(key)
-          .then(async(res) => {
+          .then(async res => {
             let result = await CacheService.decodeRawData(res);
             if (metaKey) {
               result[metaKey] = result[metaKey] || {};
@@ -511,8 +508,8 @@ export class CacheService {
 
     return Promise.all(
       items
-      .filter(item => item.expires < datetime)
-      .map(item => this.removeItem(item.key))
+        .filter(item => item.expires < datetime)
+        .map(item => this.removeItem(item.key))
     );
   }
 
@@ -530,8 +527,8 @@ export class CacheService {
 
     return Promise.all(
       items
-      .filter(item => item.groupKey === groupKey)
-      .map(item => this.removeItem(item.key))
+        .filter(item => item.groupKey === groupKey)
+        .map(item => this.removeItem(item.key))
     );
   }
 }

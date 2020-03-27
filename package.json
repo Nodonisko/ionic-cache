@@ -63,5 +63,8 @@
   },
   "peerDependencies": {
     "@ionic/storage": "^2.1.3"
+  },
+  "dependencies": {
+    "prettier": "^2.0.2"
   }
 }
