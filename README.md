@@ -134,7 +134,7 @@ return this.cache.loadFromObservable(cacheKey, request);
 #### Delayed observable caching
 
 `loadFromDelayedObservable` shows off the full power of observables.
-When you call this method and it will return the cached date (even if it's expired) 
+When you call this method and it will return the cached data (even if it's expired) 
 and immediately send a request to the server and then return the new data.
 
 ```ts
