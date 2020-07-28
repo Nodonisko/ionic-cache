@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpResponse } from '@angular/common/http';
-import { Observable, Subject } from 'rxjs';
+import { Observable, Subject, Subscription } from 'rxjs';
 import { defer, from, fromEvent, merge, throwError } from 'rxjs';
-import { share, map, catchError } from 'rxjs/operators';
+import { share, map, catchError, finalize } from 'rxjs/operators';
 import { CacheStorageService, StorageCacheItem } from './cache-storage';
 
 export interface CacheConfig {
@@ -33,7 +33,6 @@ const isHttpResponse = (data: any): boolean => {
     data.hasOwnProperty('headers') &&
     data.hasOwnProperty('url') &&
     data.hasOwnProperty('body');
-
   return data && (data instanceof HttpResponse || orCondition);
 };
 
@@ -386,13 +385,13 @@ export class CacheService {
     ttl?: number
   ): Observable<T> {
     if (!this.cacheEnabled) return observable;
-
+    let requestSubscription = new Subscription();
     observable = observable.pipe(share());
 
     return defer(() => {
       return from(this.getItem(key)).pipe(
         catchError(e => {
-          observable.subscribe(
+          requestSubscription = observable.subscribe(
             res => {
               return this.saveItem(key, res, groupKey, ttl);
             },
@@ -402,6 +401,8 @@ export class CacheService {
           );
 
           return observable;
+        }), finalize(() => {
+          requestSubscription.unsubscribe();
         })
       );
     });
@@ -426,12 +427,12 @@ export class CacheService {
     metaKey?: string
   ): Observable<T> {
     if (!this.cacheEnabled) return observable;
-
+    let requestSubscription = new Subscription();
     const observableSubject = new Subject<T>();
     observable = observable.pipe(share());
 
     const subscribeOrigin = () => {
-      observable.subscribe(
+      requestSubscription = observable.subscribe(
         res => {
           this.saveItem(key, res, groupKey, ttl);
           observableSubject.next(res);
@@ -474,7 +475,9 @@ export class CacheService {
           .catch(() => subscribeOrigin());
       });
 
-    return observableSubject.asObservable();
+    return observableSubject.asObservable().pipe(finalize(() => {
+      requestSubscription.unsubscribe();
+    }));
   }
 
   /**
