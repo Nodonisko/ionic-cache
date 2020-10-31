@@ -17,6 +17,7 @@ import { Storage } from '@ionic/storage';
 import { of, throwError } from 'rxjs';
 import { count } from 'rxjs/operators';
 import { CacheStorageService } from './cache-storage';
+import { StorageCacheItem } from './cache-storage'
 
 function isPhantomJs() {
   return !!(<any>window)._phantom;
@@ -71,7 +72,11 @@ describe('CacheService', () => {
 
   it('should save item to storage (async)', async (done) => {
     try {
-      await service.saveItem(key, cacheValue, groupKey, ttl);
+      let value = await service.saveItem(key, cacheValue, groupKey, ttl);
+      expect(value.key).toEqual(key);
+      expect(value.groupKey).toEqual(groupKey);
+      expect(value.expires).toEqual(ttl);
+
       done();
     } catch (e) {
       expect(e).toBeUndefined();
@@ -336,6 +341,9 @@ describe('CacheService Deletion', () => {
   let service: CacheService;
   let cacheKey = 'banana stand';
   let cacheValue = 'always money';
+  let groupKey = 'banana group'
+  let ttl = getTtl();
+  let item:StorageCacheItem = {key: cacheKey, value: cacheValue, groupKey: groupKey, expires: ttl, type: 'object'};
 
   let wildcardItems = [
     ['movies/comedy/1', 'Scott Pilgrim vs. The World'],
@@ -376,7 +384,7 @@ describe('CacheService Deletion', () => {
       await promise;
 
       return service.saveItem(data[0], data[1]);
-    }, Promise.resolve(true));
+    }, Promise.resolve(item));
 
     await service.removeItems('movies/*');
     let keys = await service.getRawItems();
@@ -388,7 +396,7 @@ describe('CacheService Deletion', () => {
       await promise;
 
       return service.saveItem(data[0], data[1]);
-    }, Promise.resolve(true));
+    }, Promise.resolve(item));
 
     await service.removeItems('*/1');
     let keys = await service.getRawItems();
@@ -400,7 +408,7 @@ describe('CacheService Deletion', () => {
       await promise;
 
       return service.saveItem(data[0], data[1]);
-    }, Promise.resolve(true));
+    }, Promise.resolve(item));
 
     await service.removeItems('*electronica*');
     let keys = await service.getRawItems();
@@ -412,7 +420,7 @@ describe('CacheService Deletion', () => {
       await promise;
 
       return service.saveItem(data[0], data[1]);
-    }, Promise.resolve(true));
+    }, Promise.resolve(item));
 
     await service.removeItems('s*1');
     let keys = await service.getRawItems();
@@ -424,7 +432,7 @@ describe('CacheService Deletion', () => {
       await promise;
 
       return service.saveItem(data[0], data[1]);
-    }, Promise.resolve(true));
+    }, Promise.resolve(item));
 
     await service.removeItems('songs*ctro*a/2');
     let keys = await service.getRawItems();
