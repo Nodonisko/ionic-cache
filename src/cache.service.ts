@@ -95,7 +95,7 @@ export class CacheService {
     await this.ready();
 
     let items = await this._storage.all();
-    return Promise.all(items.map(item => this.removeItem(item.key)));
+    return Promise.all(items.map((item) => this.removeItem(item.key)));
   }
 
   /**
@@ -123,7 +123,7 @@ export class CacheService {
       disconnect = fromEvent(window, 'offline').pipe(map(() => false));
 
     this.networkStatusChanges = merge(connect, disconnect).pipe(share());
-    this.networkStatusChanges.subscribe(status => {
+    this.networkStatusChanges.subscribe((status) => {
       this.networkStatus = status;
     });
   }
@@ -223,7 +223,7 @@ export class CacheService {
         const base64data = reader.result;
         resolve(base64data);
       };
-      reader.onerror = event => {
+      reader.onerror = (event) => {
         reject(event);
         reader.abort();
       };
@@ -257,9 +257,9 @@ export class CacheService {
 
     return Promise.all(
       items
-        .map(item => item.key)
-        .filter(key => key && regex.test(key))
-        .map(key => this.removeItem(key))
+        .map((item) => item.key)
+        .filter((key) => key && regex.test(key))
+        .map((key) => this.removeItem(key))
     );
   }
 
@@ -391,12 +391,12 @@ export class CacheService {
 
     return defer(() => {
       return from(this.getItem(key)).pipe(
-        catchError(e => {
+        catchError((e) => {
           observable.subscribe(
-            res => {
-              return this.saveItem(key, res, groupKey, ttl);
+            (res) => {
+              if (res.type != 0) return this.saveItem(key, res, groupKey, ttl);
             },
-            error => {
+            (error) => {
               return throwError(error);
             }
           );
@@ -432,12 +432,12 @@ export class CacheService {
 
     const subscribeOrigin = () => {
       observable.subscribe(
-        res => {
+        (res) => {
           this.saveItem(key, res, groupKey, ttl);
           observableSubject.next(res);
           observableSubject.complete();
         },
-        err => {
+        (err) => {
           observableSubject.error(err);
         },
         () => {
@@ -447,7 +447,7 @@ export class CacheService {
     };
 
     this.getItem<T>(key)
-      .then(data => {
+      .then((data) => {
         if (metaKey) {
           data[metaKey] = data[metaKey] || {};
           data[metaKey].fromCache = true;
@@ -460,9 +460,9 @@ export class CacheService {
           observableSubject.complete();
         }
       })
-      .catch(e => {
+      .catch((e) => {
         this.getRawItem<T>(key)
-          .then(async res => {
+          .then(async (res) => {
             let result = await CacheService.decodeRawData(res);
             if (metaKey) {
               result[metaKey] = result[metaKey] || {};
@@ -508,8 +508,8 @@ export class CacheService {
 
     return Promise.all(
       items
-        .filter(item => item.expires < datetime)
-        .map(item => this.removeItem(item.key))
+        .filter((item) => item.expires < datetime)
+        .map((item) => this.removeItem(item.key))
     );
   }
 
@@ -527,8 +527,8 @@ export class CacheService {
 
     return Promise.all(
       items
-        .filter(item => item.groupKey === groupKey)
-        .map(item => this.removeItem(item.key))
+        .filter((item) => item.groupKey === groupKey)
+        .map((item) => this.removeItem(item.key))
     );
   }
 }
