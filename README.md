@@ -22,12 +22,12 @@ Please report all bugs to bug report or fix it and send pull request :)
 Via NPM:
 
 ```bash
-npm install ionic-cache @ionic/storage --save
+npm install ionic-cache @ionic/storage-angular --save
 ```
 
 or Yarn:
 ```bash
-yarn add ionic-cache @ionic/storage
+yarn add ionic-cache @ionic/storage-angular
 ```
 
 You can optionally add [Cordova SQLite](https://ionicframework.com/docs/native/sqlite/).
