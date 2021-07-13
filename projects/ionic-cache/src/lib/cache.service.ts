@@ -4,6 +4,7 @@ import { Observable, Subject } from 'rxjs';
 import { defer, from, fromEvent, merge, throwError } from 'rxjs';
 import { share, map, catchError } from 'rxjs/operators';
 import { CacheStorageService, StorageCacheItem } from './cache-storage';
+import { Storage } from '@ionic/storage-angular';
 
 export interface CacheConfig {
   keyPrefix?: string;
@@ -68,7 +69,7 @@ export class CacheService {
 
   private async loadCache() {
     try {
-      await this._storage.ready();
+      await this.create();
       this.cacheEnabled = true;
     } catch (e) {
       this.cacheEnabled = false;
@@ -76,8 +77,8 @@ export class CacheService {
     }
   }
 
-  async ready(): Promise<any> {
-    await this._storage.ready();
+  create(): Promise<Storage> {
+    return this._storage.create();
   }
 
   /**
@@ -92,7 +93,7 @@ export class CacheService {
    * @return {Promise<any>}
    */
   private async resetDatabase(): Promise<any> {
-    await this.ready();
+    await this.create();
 
     let items = await this._storage.all();
     return Promise.all(items.map(item => this.removeItem(item.key)));
@@ -215,7 +216,7 @@ export class CacheService {
   }
 
   // Technique derived from: https://stackoverflow.com/a/18650249
-  private asBase64(blob): Promise<string> {
+  private asBase64(blob): Promise<string | ArrayBuffer> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(blob);
