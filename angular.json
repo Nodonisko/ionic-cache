@@ -14,11 +14,6 @@
           "options": {
             "tsConfig": "projects/ionic-cache/tsconfig.lib.json",
             "project": "projects/ionic-cache/ng-package.json"
-          },
-          "configurations": {
-            "production": {
-              "tsConfig": "projects/ionic-cache/tsconfig.lib.prod.json"
-            }
           }
         },
         "test": {
