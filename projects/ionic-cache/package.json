@@ -1,9 +1,9 @@
 {
   "name": "ionic-cache",
-  "version": "0.0.1",
+  "version": "5.2.0",
   "peerDependencies": {
-    "@angular/common": ">=11",
-    "@angular/core": ">=11",
+    "@angular/common": ">=12",
+    "@angular/core": ">=12",
     "@ionic/storage-angular": ">=3"
   },
   "dependencies": {
