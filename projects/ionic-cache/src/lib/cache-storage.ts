@@ -1,4 +1,4 @@
-import { Storage } from '@ionic/storage';
+import { Storage } from '@ionic/storage-angular';
 
 export interface StorageCacheItem {
   key: string;
@@ -11,38 +11,28 @@ export interface StorageCacheItem {
 export class CacheStorageService {
   constructor(private storage: Storage, private keyPrefix: string) {}
 
-  public ready() {
-    return this.storage.ready();
+  public create() {
+    return this.storage.create();
   }
 
   public async set(key: string, value: any) {
-    await this.ready();
-
     return this.storage.set(this.buildKey(key), value);
   }
 
   public async remove(key: string) {
-    await this.ready();
-
     return this.storage.remove(this.buildKey(key));
   }
 
   public async get(key: string) {
-    await this.ready();
-
     let value = await this.storage.get(this.buildKey(key));
     return !!value ? Object.assign({ key: key }, value) : null;
   }
 
   public async exists(key: string) {
-    await this.ready();
-
     return !!(await this.storage.get(this.buildKey(key)));
   }
 
   public async all(): Promise<StorageCacheItem[]> {
-    await this.ready();
-
     let items: StorageCacheItem[] = [];
     await this.storage.forEach((val: any, key: string) => {
       if (this.isCachedItem(key, val)) {
