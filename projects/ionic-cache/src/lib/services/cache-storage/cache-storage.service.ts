@@ -1,15 +1,12 @@
+import { Injectable } from '@angular/core';
 import { Storage } from '@ionic/storage-angular';
+import { StorageCacheItem } from 'dist/ionic-cache/lib/cache-storage';
 
-export interface StorageCacheItem {
-    key: string;
-    value: any;
-    expires: number;
-    type: string;
-    groupKey: string;
-}
-
+@Injectable()
 export class CacheStorageService {
-    constructor(private storage: Storage, private keyPrefix: string) {}
+    public keyPrefix: string;
+
+    constructor(private storage: Storage) {}
 
     public create() {
         return this.storage.create();
@@ -44,7 +41,7 @@ export class CacheStorageService {
     }
 
     /**
-     * @description Returns whether or not an object is a cached item.
+     * Returns whether or not an object is a cached item.
      * @return {boolean}
      */
     private isCachedItem(key: string, item: any): boolean {

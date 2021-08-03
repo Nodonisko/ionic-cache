@@ -1,6 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { CacheStorageService } from '../../cache-storage';
-
+import { CacheStorageService } from '../cache-storage/cache-storage.service';
 import { CacheService, MESSAGES } from './cache.service';
 
 describe('CacheService', () => {
