@@ -1,0 +1,51 @@
+version: 2.1
+
+orbs:
+    node: circleci/node@4.1.0
+
+jobs:
+    # lint:
+    #     executor:
+    #         name: node/default
+    #         tag: '14.16-browsers'
+    #     steps:
+    #         - checkout
+    #         - node/install-packages:
+    #               override-ci-command: npm install
+    #         - run:
+    #               command: npm run lint
+
+    test:
+        resource_class: xlarge
+        executor:
+            name: node/default
+            tag: '14.16-browsers'
+        steps:
+            - checkout
+            - node/install-packages:
+                  override-ci-command: npm install
+            - run:
+                  command: npm run test
+
+    build:
+        executor:
+            name: node/default
+            tag: '14.16-browsers'
+        steps:
+            - checkout
+            - node/install-packages:
+                  override-ci-command: npm install
+            - run:
+                  command: |
+                      npm run build:prod
+            - persist_to_workspace:
+                  root: .
+                  paths:
+                      - dist
+
+workflows:
+    build_and_test:
+        jobs:
+            # - lint
+            - test
+            - build
