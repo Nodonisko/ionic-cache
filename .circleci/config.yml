@@ -4,14 +4,31 @@ orbs:
     node: circleci/node@4.1.0
 
 jobs:
+    install-dependencies:
+        executor:
+            name: node/default
+            tag: '14.16-browsers'
+        steps:
+            - checkout
+            - restore_cache:
+                  keys:
+                      - v1-dependencies-{{ checksum "package-lock.json" }}
+                      - v1-dependencies-
+            - run:
+                  name: Installing dependencies
+                  command: npm install
+            - save_cache:
+                  key: v1-dependencies-{{ checksum "package-lock.json" }}
+                  paths:
+                      - node_modules
+
     # lint:
     #     executor:
     #         name: node/default
     #         tag: '14.16-browsers'
     #     steps:
     #         - checkout
-    #         - node/install-packages:
-    #               override-ci-command: npm install
+    #         - node/install-packages
     #         - run:
     #               command: npm run lint
 
@@ -20,12 +37,16 @@ jobs:
         executor:
             name: node/default
             tag: '14.16-browsers'
+        environment:
+            CHROME_BIN: '/usr/bin/google-chrome'
         steps:
             - checkout
-            - node/install-packages:
-                  override-ci-command: npm install
+            - restore_cache:
+                  keys:
+                      - v1-dependencies-{{ checksum "package-lock.json" }}
+                      - v1-dependencies-
             - run:
-                  command: npm run test
+                  command: npm run test -- --no-watch --no-progress
 
     build:
         executor:
@@ -33,8 +54,10 @@ jobs:
             tag: '14.16-browsers'
         steps:
             - checkout
-            - node/install-packages:
-                  override-ci-command: npm install
+            - restore_cache:
+                  keys:
+                      - v1-dependencies-{{ checksum "package-lock.json" }}
+                      - v1-dependencies-
             - run:
                   command: |
                       npm run build:prod
@@ -46,6 +69,11 @@ jobs:
 workflows:
     build_and_test:
         jobs:
+            - install-dependencies
             # - lint
-            - test
-            - build
+            - test:
+                  requires:
+                      - install-dependencies
+            - build:
+                  requires:
+                      - install-dependencies
