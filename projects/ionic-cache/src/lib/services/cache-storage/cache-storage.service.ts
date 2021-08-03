@@ -8,29 +8,29 @@ export class CacheStorageService {
 
     constructor(private storage: Storage) {}
 
-    public create() {
+    public create(): Promise<Storage> {
         return this.storage.create();
     }
 
-    public async set(key: string, value: any) {
+    public async set(key: string, value: any): Promise<any> {
         return this.storage.set(this.buildKey(key), value);
     }
 
-    public async remove(key: string) {
+    public async remove(key: string): Promise<any> {
         return this.storage.remove(this.buildKey(key));
     }
 
-    public async get(key: string) {
-        let value = await this.storage.get(this.buildKey(key));
+    public async get(key: string): Promise<any> {
+        const value = await this.storage.get(this.buildKey(key));
         return !!value ? Object.assign({ key: key }, value) : null;
     }
 
-    public async exists(key: string) {
+    public async exists(key: string): Promise<boolean> {
         return !!(await this.storage.get(this.buildKey(key)));
     }
 
     public async all(): Promise<StorageCacheItem[]> {
-        let items: StorageCacheItem[] = [];
+        const items: StorageCacheItem[] = [];
         await this.storage.forEach((val: any, key: string) => {
             if (this.isCachedItem(key, val)) {
                 items.push(Object.assign({ key: this.debuildKey(key) }, val));

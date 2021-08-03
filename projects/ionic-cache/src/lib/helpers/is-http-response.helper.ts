@@ -1,9 +1,9 @@
 import { HttpResponse } from '@angular/common/http';
 
 /**
- * @description Check if it's an HttpResponse
- * @param {any} data - Variable to test
- * @return {boolean} - data from cache
+ * Checks if it's a HttpResponse
+ * @param data The variable to test
+ * @return The data from cache
  */
 export function isHttpResponse(data: any): boolean {
     let orCondition =

@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { errorMessages } from '../../constants/error-messages.constant';
+import { convertBlobToBase64 } from '../../helpers/convert-blob-to-base64.helper';
 import { CacheStorageService } from '../cache-storage/cache-storage.service';
 import { CacheService } from './cache.service';
 
@@ -167,7 +168,7 @@ describe('CacheService', () => {
                 });
 
                 it('should save the json string of base64 to storage', async () => {
-                    const mockDataBase64 = await service['asBase64'](mockData);
+                    const mockDataBase64 = await convertBlobToBase64(mockData);
                     const mockDataJson = JSON.stringify(mockDataBase64);
 
                     expect(
