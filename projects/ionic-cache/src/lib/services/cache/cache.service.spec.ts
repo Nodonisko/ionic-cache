@@ -69,17 +69,6 @@ describe('CacheService', () => {
         expect(service['cacheEnabled']).toBe(true);
     });
 
-    describe('create', () => {
-        beforeEach(() => {
-            dependencies.cacheStorageService.create.calls.reset();
-            service.create();
-        });
-
-        it('should create the cache', () => {
-            expect(dependencies.cacheStorageService.create).toHaveBeenCalled();
-        });
-    });
-
     describe('enableCache', () => {
         describe('when enable is true', () => {
             beforeEach(() => {

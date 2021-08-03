@@ -18,14 +18,14 @@ export class CacheService {
     private networkStatusChanges: Observable<boolean>;
     private networkStatus: boolean = true;
 
-    constructor(private _storage: CacheStorageService) {
+    constructor(private cacheStorage: CacheStorageService) {
         this.watchNetworkInit();
         this.loadCache();
     }
 
     private async loadCache() {
         try {
-            await this.create();
+            await this.cacheStorage.create();
             this.cacheEnabled = true;
         } catch (e) {
             this.cacheEnabled = false;
@@ -33,9 +33,6 @@ export class CacheService {
         }
     }
 
-    create(): Promise<Storage> {
-        return this._storage.create();
-    }
 
     /**
      * @description Disable or enable cache
@@ -49,9 +46,9 @@ export class CacheService {
      * @return {Promise<any>}
      */
     private async resetDatabase(): Promise<any> {
-        await this.create();
+        await this.cacheStorage.create();
 
-        let items = await this._storage.all();
+        let items = await this.cacheStorage.all();
         return Promise.all(items.map((item) => this.removeItem(item.key)));
     }
 
@@ -127,7 +124,7 @@ export class CacheService {
             type = isHttpResponse(data) ? 'response' : typeof data,
             value = JSON.stringify(data);
 
-        return this._storage.set(key, {
+        return this.cacheStorage.set(key, {
             value,
             expires,
             type,
@@ -160,7 +157,7 @@ export class CacheService {
             const base64data = await this.asBase64(blob);
             const value = JSON.stringify(base64data);
 
-            return this._storage.set(key, {
+            return this.cacheStorage.set(key, {
                 value,
                 expires,
                 type,
@@ -197,7 +194,7 @@ export class CacheService {
             throw new Error(errorMessages.notEnabled);
         }
 
-        return this._storage.remove(key);
+        return this.cacheStorage.remove(key);
     }
 
     /**
@@ -210,7 +207,7 @@ export class CacheService {
         }
 
         let regex = new RegExp(`^${pattern.split('*').join('.*')}$`);
-        let items = await this._storage.all();
+        let items = await this.cacheStorage.all();
 
         return Promise.all(
             items
@@ -231,7 +228,7 @@ export class CacheService {
         }
 
         try {
-            let data = await this._storage.get(key);
+            let data = await this.cacheStorage.get(key);
             if (!!data) {
                 return data;
             }
@@ -243,7 +240,7 @@ export class CacheService {
     }
 
     async getRawItems() {
-        return this._storage.all();
+        return this.cacheStorage.all();
     }
 
     /**
@@ -256,7 +253,7 @@ export class CacheService {
             throw new Error(errorMessages.notEnabled);
         }
 
-        return this._storage.exists(key);
+        return this.cacheStorage.exists(key);
     }
 
     /**
@@ -460,7 +457,7 @@ export class CacheService {
             throw new Error(errorMessages.browserOffline);
         }
 
-        let items = await this._storage.all();
+        let items = await this.cacheStorage.all();
         let datetime = new Date().getTime();
 
         return Promise.all(
@@ -480,7 +477,7 @@ export class CacheService {
             throw new Error(errorMessages.notEnabled);
         }
 
-        let items = await this._storage.all();
+        let items = await this.cacheStorage.all();
 
         return Promise.all(
             items
