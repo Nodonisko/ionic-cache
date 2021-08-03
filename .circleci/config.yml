@@ -1,13 +1,9 @@
 version: 2.1
 
-orbs:
-    node: circleci/node@4.1.0
-
 jobs:
     install-dependencies:
-        executor:
-            name: node/default
-            tag: '14.16-browsers'
+        docker:
+          - image: 'circleci/node:14.16-browsers'
         steps:
             - checkout
             - restore_cache:
@@ -22,23 +18,9 @@ jobs:
                   paths:
                       - node_modules
 
-    # lint:
-    #     executor:
-    #         name: node/default
-    #         tag: '14.16-browsers'
-    #     steps:
-    #         - checkout
-    #         - node/install-packages
-    #         - run:
-    #               command: npm run lint
-
     test:
-        resource_class: xlarge
-        executor:
-            name: node/default
-            tag: '14.16-browsers'
-        environment:
-            CHROME_BIN: '/usr/bin/google-chrome'
+        docker:
+          - image: 'circleci/node:14.16-browsers'
         steps:
             - checkout
             - restore_cache:
@@ -49,9 +31,8 @@ jobs:
                   command: npm run test -- --no-watch --no-progress
 
     build:
-        executor:
-            name: node/default
-            tag: '14.16-browsers'
+        docker:
+          - image: 'circleci/node:14.16-browsers'
         steps:
             - checkout
             - restore_cache:
@@ -70,7 +51,6 @@ workflows:
     build_and_test:
         jobs:
             - install-dependencies
-            # - lint
             - test:
                   requires:
                       - install-dependencies
