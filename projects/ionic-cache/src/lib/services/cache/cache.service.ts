@@ -7,40 +7,8 @@ import { Storage } from '@ionic/storage-angular';
 import { CacheStorageService } from '../cache-storage/cache-storage.service';
 import { StorageCacheItem } from '../../interfaces/cache-storage-item.interface';
 import { errorMessages } from '../../constants/error-messages.constant';
-
-/**
- * @description Check if it's an HttpResponse
- * @param {any} data - Variable to test
- * @return {boolean} - data from cache
- */
-const isHttpResponse = (data: any): boolean => {
-    let orCondition =
-        data &&
-        typeof data === 'object' &&
-        data.hasOwnProperty('status') &&
-        data.hasOwnProperty('statusText') &&
-        data.hasOwnProperty('headers') &&
-        data.hasOwnProperty('url') &&
-        data.hasOwnProperty('body');
-
-    return data && (data instanceof HttpResponse || orCondition);
-};
-
-const isJsOrResponseType = (data: any): boolean => {
-    const jsType =
-        data.type === 'undefined' ||
-        data.type === 'object' ||
-        data.type === 'boolean' ||
-        data.type === 'number' ||
-        data.type === 'bigint' ||
-        data.type === 'string' ||
-        data.type === 'symbol' ||
-        data.type === 'function';
-
-    const responseType = data.type === 'response';
-
-    return responseType || jsType;
-};
+import { isHttpResponse } from '../../helpers/is-http-response.helper';
+import { isJsOrResponseType } from '../../helpers/is-js-or-response-type.helper';
 
 @Injectable()
 export class CacheService {

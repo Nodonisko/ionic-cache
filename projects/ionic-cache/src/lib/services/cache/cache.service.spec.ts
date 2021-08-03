@@ -428,7 +428,9 @@ describe('CacheService', () => {
                         try {
                             await service.getItem(mockKey);
                         } catch (error) {
-                            expect(error.message).toBe(errorMessages.expired + mockKey);
+                            expect(error.message).toBe(
+                                errorMessages.expired + mockKey
+                            );
                         }
                     });
                 });
