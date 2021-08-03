@@ -1,0 +1,27 @@
+{
+  "projectName": "ionic-cache",
+  "projectOwner": "Nodonisko",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": true,
+  "commitConvention": "angular",
+  "contributors": [
+    {
+      "login": "Nodonisko",
+      "name": "Daniel Suchý",
+      "avatar_url": "https://avatars.githubusercontent.com/u/5837757?v=4",
+      "profile": "https://danielsuchy.cz/",
+      "contributions": [
+        "ideas",
+        "doc",
+        "code",
+        "review"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7
+}
