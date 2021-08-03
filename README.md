@@ -13,11 +13,12 @@ Key features:
 
 Please report all bugs to bug report or fix it and send pull request :)
 
-#### Big thanks to all contributors for help:
+#### Maintainers:
 
--   Special thanks to [ihadeed](https://github.com/ihadeed)
--   [imatefx](https://github.com/imatefx)
--   [Vojta Tranta](https://github.com/vojtatranta)
+-   [Will Poulson](https://github.com/WillPoulson)
+-   [Daniel Suchy](https://github.com/Nodonisko)
+
+Special thanks to contributors: [ihadeed](https://github.com/ihadeed), [imatefx](https://github.com/imatefx), [Vojta Tranta](https://github.com/vojtatranta)
 
 ## Install
 
