@@ -7,19 +7,19 @@ import { CacheService } from './cache.service';
 describe('CacheService', () => {
     let service: CacheService;
     let dependencies: {
-        cacheStorageService: jasmine.SpyObj<CacheStorageService>;
+        cacheStorageService: jest.Mocked<CacheStorageService>;
     };
 
     beforeEach(() => {
         dependencies = {
-            cacheStorageService: jasmine.createSpyObj('cacheStorageService', [
-                'create',
-                'set',
-                'remove',
-                'get',
-                'exists',
-                'all',
-            ]),
+            cacheStorageService: {
+                create: jest.fn(),
+                set: jest.fn(),
+                remove: jest.fn(),
+                get: jest.fn(),
+                exists: jest.fn(),
+                all: jest.fn()
+            } as any
         };
 
         TestBed.configureTestingModule({
@@ -111,7 +111,7 @@ describe('CacheService', () => {
         let mockData;
 
         beforeEach(() => {
-            dependencies.cacheStorageService.set.calls.reset();
+            dependencies.cacheStorageService.set.mockClear();
         });
 
         describe('when cache is enabled', () => {
@@ -128,7 +128,7 @@ describe('CacheService', () => {
                         dependencies.cacheStorageService.set
                     ).toHaveBeenCalledWith(mockKey, {
                         value: mockDataJson,
-                        expires: jasmine.any(Number),
+                        expires: expect.any(Number),
                         type: 'object',
                         groupKey: 'none',
                     });
@@ -154,7 +154,7 @@ describe('CacheService', () => {
                         dependencies.cacheStorageService.set
                     ).toHaveBeenCalledWith(mockKey, {
                         value: mockDataJson,
-                        expires: jasmine.any(Number),
+                        expires: expect.any(Number),
                         type: 'response',
                         groupKey: 'none',
                     });
@@ -175,7 +175,7 @@ describe('CacheService', () => {
                         dependencies.cacheStorageService.set
                     ).toHaveBeenCalledWith(mockKey, {
                         value: mockDataJson,
-                        expires: jasmine.any(Number),
+                        expires: expect.any(Number),
                         type: 'text/html',
                         groupKey: 'none',
                     });
@@ -240,7 +240,7 @@ describe('CacheService', () => {
             ];
 
             beforeEach(() => {
-                dependencies.cacheStorageService.all.and.returnValue(
+                dependencies.cacheStorageService.all.mockReturnValue(
                     Promise.resolve(mockStorageItems as any)
                 );
             });
@@ -279,7 +279,7 @@ describe('CacheService', () => {
                 const mockKey = 'key';
 
                 beforeEach(() => {
-                    dependencies.cacheStorageService.get.and.returnValue(
+                    dependencies.cacheStorageService.get.mockReturnValue(
                         Promise.resolve({})
                     );
                     return service.getRawItem(mockKey);
@@ -369,7 +369,7 @@ describe('CacheService', () => {
                         value: JSON.stringify({ example: 'test' }),
                         expires: new Date().getTime() + 10000,
                     };
-                    dependencies.cacheStorageService.get.and.returnValue(
+                    dependencies.cacheStorageService.get.mockReturnValue(
                         Promise.resolve(mockData)
                     );
                     return service.getItem(mockKey);
@@ -388,7 +388,7 @@ describe('CacheService', () => {
                         value: JSON.stringify({ example: 'test' }),
                         expires: new Date().getTime() - 10000,
                     };
-                    dependencies.cacheStorageService.get.and.returnValue(
+                    dependencies.cacheStorageService.get.mockReturnValue(
                         Promise.resolve(mockData)
                     );
                 });
@@ -408,7 +408,7 @@ describe('CacheService', () => {
                 describe('when invalidateOffline is false and offline', () => {
                     beforeEach(() => {
                         service.setOfflineInvalidate(true);
-                        spyOn(service, 'isOnline').and.returnValue(false);
+                        jest.spyOn(service, 'isOnline').mockReturnValue(false);
                         return service.getItem(mockKey);
                     });
 
@@ -440,12 +440,12 @@ describe('CacheService', () => {
         const mockKey = 'key';
 
         beforeEach(() => {
-            dependencies.cacheStorageService.get.calls.reset();
+            dependencies.cacheStorageService.get.mockClear();
         });
 
         describe('when the item exists', () => {
             beforeEach(() => {
-                dependencies.cacheStorageService.get.and.returnValue(
+                dependencies.cacheStorageService.get.mockReturnValue(
                     Promise.resolve({})
                 );
                 return service.getOrSetItem(mockKey, () => Promise.resolve({}));
@@ -461,7 +461,7 @@ describe('CacheService', () => {
         describe('when the item does not exist', () => {
             const mockData = { data: true };
             beforeEach(() => {
-                dependencies.cacheStorageService.get.and.returnValue(
+                dependencies.cacheStorageService.get.mockReturnValue(
                     Promise.reject()
                 );
                 return service.getOrSetItem(mockKey, () =>
@@ -474,7 +474,7 @@ describe('CacheService', () => {
                     dependencies.cacheStorageService.set
                 ).toHaveBeenCalledWith(mockKey, {
                     value: JSON.stringify(mockData),
-                    expires: jasmine.any(Number),
+                    expires: expect.any(Number),
                     type: 'object',
                     groupKey: 'none',
                 });

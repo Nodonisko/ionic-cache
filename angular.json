@@ -22,11 +22,9 @@
                     }
                 },
                 "test": {
-                    "builder": "@angular-devkit/build-angular:karma",
+                    "builder": "@angular-builders/jest:run",
                     "options": {
-                        "main": "projects/ionic-cache/src/test.ts",
-                        "tsConfig": "projects/ionic-cache/tsconfig.spec.json",
-                        "karmaConfig": "projects/ionic-cache/karma.conf.js"
+                        "tsConfig": "projects/ionic-cache/tsconfig.spec.json"
                     }
                 },
                 "lint": {

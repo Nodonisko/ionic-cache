@@ -30,7 +30,7 @@ jobs:
             - run:
                   command: npm run lint
             - run:
-                  command: npm run test -- --no-watch --no-progress
+                  command: npm run test -- --ci
 
     build:
         docker:

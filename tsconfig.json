@@ -13,6 +13,7 @@
         "experimentalDecorators": true,
         "moduleResolution": "node",
         "importHelpers": true,
+        "esModuleInterop": true,
         "target": "es2015",
         "module": "es2020",
         "lib": ["es2018", "dom"]
