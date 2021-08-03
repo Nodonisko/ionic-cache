@@ -6,37 +6,39 @@ import { CacheStorageService } from './cache-storage';
 export const CONFIG = new InjectionToken<CacheConfig>('CONFIG');
 
 let cacheConfigDefaults: CacheConfig = {
-  keyPrefix: '',
+    keyPrefix: '',
 };
 
 export function buildCacheService(storage: Storage, cacheConfig: CacheConfig) {
-  cacheConfig = Object.assign(cacheConfigDefaults, cacheConfig);
+    cacheConfig = Object.assign(cacheConfigDefaults, cacheConfig);
 
-  return new CacheService(
-    new CacheStorageService(storage, cacheConfig.keyPrefix)
-  );
+    return new CacheService(
+        new CacheStorageService(storage, cacheConfig.keyPrefix)
+    );
 }
 
 @NgModule({
-  imports: [
-    IonicStorageModule.forRoot({
-      name: '__ionicCache',
-      driverOrder: ['indexeddb', 'sqlite', 'websql'],
-    }),
-  ],
+    imports: [
+        IonicStorageModule.forRoot({
+            name: '__ionicCache',
+            driverOrder: ['indexeddb', 'sqlite', 'websql'],
+        }),
+    ],
 })
 export class CacheModule {
-  static forRoot(cacheConfig?: CacheConfig): ModuleWithProviders<CacheModule> {
-    return {
-      ngModule: CacheModule,
-      providers: [
-        { provide: CONFIG, useValue: cacheConfig },
-        {
-          provide: CacheService,
-          useFactory: buildCacheService,
-          deps: [Storage, CONFIG],
-        },
-      ],
-    };
-  }
+    static forRoot(
+        cacheConfig?: CacheConfig
+    ): ModuleWithProviders<CacheModule> {
+        return {
+            ngModule: CacheModule,
+            providers: [
+                { provide: CONFIG, useValue: cacheConfig },
+                {
+                    provide: CacheService,
+                    useFactory: buildCacheService,
+                    deps: [Storage, CONFIG],
+                },
+            ],
+        };
+    }
 }

@@ -4,18 +4,20 @@ Ionic cache service that can cache almost everything. **It caches requests, obse
 It can be used separatelety in Angular 2 application.
 
 Key features:
-+ Request caching
-+ Delayed observable caching (see docs for more info)
-+ Don't invalidate cache if is browser offline
-+ Set and invalidate groups of entries
-+ Supports IndexedDB, SQLite (Cordova), WebSQL via Ionic Storage
+
+-   Request caching
+-   Delayed observable caching (see docs for more info)
+-   Don't invalidate cache if is browser offline
+-   Set and invalidate groups of entries
+-   Supports IndexedDB, SQLite (Cordova), WebSQL via Ionic Storage
 
 Please report all bugs to bug report or fix it and send pull request :)
 
 #### Big thanks to all contributors for help:
-+ Special thanks to [ihadeed](https://github.com/ihadeed)
-+ [imatefx](https://github.com/imatefx)
-+ [Vojta Tranta](https://github.com/vojtatranta)
+
+-   Special thanks to [ihadeed](https://github.com/ihadeed)
+-   [imatefx](https://github.com/imatefx)
+-   [Vojta Tranta](https://github.com/vojtatranta)
 
 ## Install
 
@@ -26,6 +28,7 @@ npm install ionic-cache @ionic/storage-angular --save
 ```
 
 or Yarn:
+
 ```bash
 yarn add ionic-cache @ionic/storage-angular
 ```
@@ -34,7 +37,7 @@ You can optionally add [Cordova SQLite](https://ionicframework.com/docs/native/s
 
 And inject service to your app:
 
-*app.module.ts*
+_app.module.ts_
 
 ```ts
 import { CacheModule } from "ionic-cache";
@@ -47,7 +50,7 @@ import { CacheModule } from "ionic-cache";
 })
 ```
 
-*app.component.ts*
+_app.component.ts_
 
 ```ts
 import { CacheService } from "ionic-cache";
@@ -119,7 +122,7 @@ return this.cache.loadFromObservable(cacheKey, request).pipe(map(res => res.body
 
 #### Cache with custom Observable operators
 
-`loadFromObservable` accepts an Observable and returns an Observable, so you are free to use all of the Observable operators. 
+`loadFromObservable` accepts an Observable and returns an Observable, so you are free to use all of the Observable operators.
 For example error handling (on error, retry request every 6 seconds if fails):
 
 ```ts
@@ -134,7 +137,7 @@ return this.cache.loadFromObservable(cacheKey, request);
 #### Delayed observable caching
 
 `loadFromDelayedObservable` shows off the full power of observables.
-When you call this method and it will return the cached data (even if it's expired) 
+When you call this method and it will return the cached data (even if it's expired)
 and immediately send a request to the server and then return the new data.
 
 ```ts
@@ -251,6 +254,7 @@ let item = await this.cache.getRawItem(key);
 ```
 
 There's also the `getRawItems` method, which returns an array of the raw cached items.
+
 ```ts
 ...
 let rawItems = await this.cache.getRawItems();

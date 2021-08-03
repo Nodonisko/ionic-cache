@@ -1,4 +1,2 @@
-package.json
-package-lock.json
 dist
-aot
+node_modules
