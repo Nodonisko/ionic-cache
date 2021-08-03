@@ -10,23 +10,21 @@ export const CONFIG = new InjectionToken<CacheConfig>('CONFIG');
     imports: [
         IonicStorageModule.forRoot({
             name: '__ionicCache',
-            driverOrder: ['indexeddb', 'sqlite', 'websql'],
-        }),
-    ],
+            driverOrder: ['indexeddb', 'sqlite', 'websql']
+        })
+    ]
 })
 export class CacheModule {
-    static forRoot(
-        cacheConfig?: CacheConfig
-    ): ModuleWithProviders<CacheModule> {
+    static forRoot(cacheConfig?: CacheConfig): ModuleWithProviders<CacheModule> {
         return {
             ngModule: CacheModule,
             providers: [
                 {
                     provide: CONFIG,
-                    useValue: { ...defaultConfig, ...cacheConfig },
+                    useValue: { ...defaultConfig, ...cacheConfig }
                 },
-                CacheService,
-            ],
+                CacheService
+            ]
         };
     }
 }

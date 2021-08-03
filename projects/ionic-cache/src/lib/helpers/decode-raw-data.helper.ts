@@ -12,7 +12,7 @@ export async function decodeRawData(data: StorageCacheItem): Promise<any> {
                 status: dataJson.status,
                 headers: dataJson.headers,
                 statusText: dataJson.statusText,
-                url: dataJson.url,
+                url: dataJson.url
             };
 
             return new HttpResponse(response);

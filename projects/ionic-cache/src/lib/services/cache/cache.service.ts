@@ -56,12 +56,7 @@ export class CacheService {
      * @param ttl The TTL in seconds
      * @returns The saved data
      */
-    public saveItem(
-        key: string,
-        data: any,
-        groupKey: string = 'none',
-        ttl: number = this.ttl
-    ): Promise<any> {
+    public saveItem(key: string, data: any, groupKey: string = 'none', ttl: number = this.ttl): Promise<any> {
         if (!this.cacheEnabled) {
             throw new Error(errorMessages.notEnabled);
         }
@@ -78,7 +73,7 @@ export class CacheService {
             value,
             expires,
             type,
-            groupKey,
+            groupKey
         });
     }
 
@@ -170,10 +165,7 @@ export class CacheService {
 
         const data = await this.getRawItem(key);
 
-        if (
-            data.expires < new Date().getTime() &&
-            (this.invalidateOffline || this.isOnline())
-        ) {
+        if (data.expires < new Date().getTime() && (this.invalidateOffline || this.isOnline())) {
             throw new Error(errorMessages.expired + key);
         }
 
@@ -188,12 +180,7 @@ export class CacheService {
      * @param ttl The TTL in seconds.
      * @returns A promise which resolves with the data.
      */
-    public async getOrSetItem<T>(
-        key: string,
-        factory: () => Promise<T>,
-        groupKey?: string,
-        ttl?: number
-    ): Promise<T> {
+    public async getOrSetItem<T>(key: string, factory: () => Promise<T>, groupKey?: string, ttl?: number): Promise<T> {
         let val: T;
 
         try {
@@ -214,12 +201,7 @@ export class CacheService {
      * @param ttl The TTL in seconds
      * @returns An observable with the data from the cache or provided observable.
      */
-    public loadFromObservable<T = any>(
-        key: string,
-        observable: any,
-        groupKey?: string,
-        ttl?: number
-    ): Observable<T> {
+    public loadFromObservable<T = any>(key: string, observable: any, groupKey?: string, ttl?: number): Observable<T> {
         if (!this.cacheEnabled) {
             return observable;
         }
@@ -264,7 +246,7 @@ export class CacheService {
         delayType: string = 'expired',
         metaKey?: string
     ): Observable<T> {
-        if (!this.cacheEnabled){
+        if (!this.cacheEnabled) {
             return observable;
         }
 
@@ -347,11 +329,7 @@ export class CacheService {
         const items = await this.cacheStorage.all();
         const datetime = new Date().getTime();
 
-        return Promise.all(
-            items
-                .filter((item) => item.expires < datetime)
-                .map((item) => this.removeItem(item.key))
-        );
+        return Promise.all(items.filter((item) => item.expires < datetime).map((item) => this.removeItem(item.key)));
     }
 
     /**
@@ -366,11 +344,7 @@ export class CacheService {
 
         const items = await this.cacheStorage.all();
 
-        return Promise.all(
-            items
-                .filter((item) => item.groupKey === groupKey)
-                .map((item) => this.removeItem(item.key))
-        );
+        return Promise.all(items.filter((item) => item.groupKey === groupKey).map((item) => this.removeItem(item.key)));
     }
 
     /**
@@ -398,7 +372,6 @@ export class CacheService {
         return Promise.all(items.map((item) => this.removeItem(item.key)));
     }
 
-
     /**
      * Saves a blob item to the cache storage with the provided options.
      * @param key The unique key
@@ -407,7 +380,7 @@ export class CacheService {
      * @param ttl The TTL in seconds
      * @returns The saved data
      */
-     private async saveBlobItem(
+    private async saveBlobItem(
         key: string,
         blob: any,
         groupKey: string = 'none',
@@ -428,7 +401,7 @@ export class CacheService {
                 value,
                 expires,
                 type,
-                groupKey,
+                groupKey
             });
         } catch (error) {
             throw new Error(error);

@@ -9,8 +9,7 @@ const config = {
         }
     },
     moduleNameMapper: {
-        '^@ionic/storage':
-            '<rootDir>/node_modules/@ionic/storage/dist/esm/index.d.ts'
+        '^@ionic/storage': '<rootDir>/node_modules/@ionic/storage/dist/esm/index.d.ts'
     }
 };
 

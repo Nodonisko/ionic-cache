@@ -27,9 +27,9 @@ describe('CacheService', () => {
                 CacheService,
                 {
                     provide: CacheStorageService,
-                    useValue: dependencies.cacheStorageService,
-                },
-            ],
+                    useValue: dependencies.cacheStorageService
+                }
+            ]
         });
         service = TestBed.inject(CacheService);
     });
@@ -124,13 +124,11 @@ describe('CacheService', () => {
                 it('should save the json string to storage', async () => {
                     const mockDataJson = JSON.stringify(mockData);
 
-                    expect(
-                        dependencies.cacheStorageService.set
-                    ).toHaveBeenCalledWith(mockKey, {
+                    expect(dependencies.cacheStorageService.set).toHaveBeenCalledWith(mockKey, {
                         value: mockDataJson,
                         expires: expect.any(Number),
                         type: 'object',
-                        groupKey: 'none',
+                        groupKey: 'none'
                     });
                 });
             });
@@ -142,7 +140,7 @@ describe('CacheService', () => {
                         statusText: 'Success',
                         headers: ['header'],
                         url: 'https://google.com',
-                        body: {},
+                        body: {}
                     };
                     return service.saveItem(mockKey, mockData);
                 });
@@ -150,13 +148,11 @@ describe('CacheService', () => {
                 it('should save the json string to storage with the type of response', async () => {
                     const mockDataJson = JSON.stringify(mockData);
 
-                    expect(
-                        dependencies.cacheStorageService.set
-                    ).toHaveBeenCalledWith(mockKey, {
+                    expect(dependencies.cacheStorageService.set).toHaveBeenCalledWith(mockKey, {
                         value: mockDataJson,
                         expires: expect.any(Number),
                         type: 'response',
-                        groupKey: 'none',
+                        groupKey: 'none'
                     });
                 });
             });
@@ -171,13 +167,11 @@ describe('CacheService', () => {
                     const mockDataBase64 = await convertBlobToBase64(mockData);
                     const mockDataJson = JSON.stringify(mockDataBase64);
 
-                    expect(
-                        dependencies.cacheStorageService.set
-                    ).toHaveBeenCalledWith(mockKey, {
+                    expect(dependencies.cacheStorageService.set).toHaveBeenCalledWith(mockKey, {
                         value: mockDataJson,
                         expires: expect.any(Number),
                         type: 'text/html',
-                        groupKey: 'none',
+                        groupKey: 'none'
                     });
                 });
             });
@@ -207,9 +201,7 @@ describe('CacheService', () => {
             });
 
             it('should remove the item in storage', () => {
-                expect(
-                    dependencies.cacheStorageService.remove
-                ).toHaveBeenCalledWith(mockKey);
+                expect(dependencies.cacheStorageService.remove).toHaveBeenCalledWith(mockKey);
             });
         });
 
@@ -236,13 +228,11 @@ describe('CacheService', () => {
                 { key: 'songs/metal/1', data: 'Who Bit the Moon' },
                 { key: 'songs/metal/2', data: 'Hail The Apocalypse' },
                 { key: 'songs/electronica/1', data: 'Power Glove' },
-                { key: 'songs/electronica/2', data: 'Centipede' },
+                { key: 'songs/electronica/2', data: 'Centipede' }
             ];
 
             beforeEach(() => {
-                dependencies.cacheStorageService.all.mockReturnValue(
-                    Promise.resolve(mockStorageItems as any)
-                );
+                dependencies.cacheStorageService.all.mockReturnValue(Promise.resolve(mockStorageItems as any));
             });
 
             describe('when using a wildcard', () => {
@@ -251,9 +241,7 @@ describe('CacheService', () => {
                 });
 
                 it('should remove songs/electronica/2', () => {
-                    expect(
-                        dependencies.cacheStorageService.remove
-                    ).toHaveBeenCalledWith('songs/electronica/2');
+                    expect(dependencies.cacheStorageService.remove).toHaveBeenCalledWith('songs/electronica/2');
                 });
             });
         });
@@ -279,16 +267,12 @@ describe('CacheService', () => {
                 const mockKey = 'key';
 
                 beforeEach(() => {
-                    dependencies.cacheStorageService.get.mockReturnValue(
-                        Promise.resolve({})
-                    );
+                    dependencies.cacheStorageService.get.mockReturnValue(Promise.resolve({}));
                     return service.getRawItem(mockKey);
                 });
 
                 it('should get the data from storage', () => {
-                    expect(
-                        dependencies.cacheStorageService.get
-                    ).toHaveBeenCalledWith(mockKey);
+                    expect(dependencies.cacheStorageService.get).toHaveBeenCalledWith(mockKey);
                 });
             });
 
@@ -337,9 +321,7 @@ describe('CacheService', () => {
             });
 
             it('should check if the key exists in storage', () => {
-                expect(
-                    dependencies.cacheStorageService.exists
-                ).toHaveBeenCalledWith(mockKey);
+                expect(dependencies.cacheStorageService.exists).toHaveBeenCalledWith(mockKey);
             });
         });
 
@@ -367,18 +349,14 @@ describe('CacheService', () => {
                 beforeEach(() => {
                     mockData = {
                         value: JSON.stringify({ example: 'test' }),
-                        expires: new Date().getTime() + 10000,
+                        expires: new Date().getTime() + 10000
                     };
-                    dependencies.cacheStorageService.get.mockReturnValue(
-                        Promise.resolve(mockData)
-                    );
+                    dependencies.cacheStorageService.get.mockReturnValue(Promise.resolve(mockData));
                     return service.getItem(mockKey);
                 });
 
                 it('should get if the key from storage', () => {
-                    expect(
-                        dependencies.cacheStorageService.get
-                    ).toHaveBeenCalledWith(mockKey);
+                    expect(dependencies.cacheStorageService.get).toHaveBeenCalledWith(mockKey);
                 });
             });
 
@@ -386,11 +364,9 @@ describe('CacheService', () => {
                 beforeEach(() => {
                     mockData = {
                         value: JSON.stringify({ example: 'test' }),
-                        expires: new Date().getTime() - 10000,
+                        expires: new Date().getTime() - 10000
                     };
-                    dependencies.cacheStorageService.get.mockReturnValue(
-                        Promise.resolve(mockData)
-                    );
+                    dependencies.cacheStorageService.get.mockReturnValue(Promise.resolve(mockData));
                 });
 
                 describe('when invalidateOffline is true and online', () => {
@@ -398,9 +374,7 @@ describe('CacheService', () => {
                         try {
                             await service.getItem(mockKey);
                         } catch (error) {
-                            expect(error.message).toBe(
-                                errorMessages.expired + mockKey
-                            );
+                            expect(error.message).toBe(errorMessages.expired + mockKey);
                         }
                     });
                 });
@@ -413,9 +387,7 @@ describe('CacheService', () => {
                     });
 
                     it('should get if the key from storage', () => {
-                        expect(
-                            dependencies.cacheStorageService.get
-                        ).toHaveBeenCalledWith(mockKey);
+                        expect(dependencies.cacheStorageService.get).toHaveBeenCalledWith(mockKey);
                     });
                 });
             });
@@ -445,38 +417,28 @@ describe('CacheService', () => {
 
         describe('when the item exists', () => {
             beforeEach(() => {
-                dependencies.cacheStorageService.get.mockReturnValue(
-                    Promise.resolve({})
-                );
+                dependencies.cacheStorageService.get.mockReturnValue(Promise.resolve({}));
                 return service.getOrSetItem(mockKey, () => Promise.resolve({}));
             });
 
             it('should get the item from storage', () => {
-                expect(
-                    dependencies.cacheStorageService.get
-                ).toHaveBeenCalledWith(mockKey);
+                expect(dependencies.cacheStorageService.get).toHaveBeenCalledWith(mockKey);
             });
         });
 
         describe('when the item does not exist', () => {
             const mockData = { data: true };
             beforeEach(() => {
-                dependencies.cacheStorageService.get.mockReturnValue(
-                    Promise.reject()
-                );
-                return service.getOrSetItem(mockKey, () =>
-                    Promise.resolve(mockData)
-                );
+                dependencies.cacheStorageService.get.mockReturnValue(Promise.reject());
+                return service.getOrSetItem(mockKey, () => Promise.resolve(mockData));
             });
 
             it('should set the item in storage', () => {
-                expect(
-                    dependencies.cacheStorageService.set
-                ).toHaveBeenCalledWith(mockKey, {
+                expect(dependencies.cacheStorageService.set).toHaveBeenCalledWith(mockKey, {
                     value: JSON.stringify(mockData),
                     expires: expect.any(Number),
                     type: 'object',
-                    groupKey: 'none',
+                    groupKey: 'none'
                 });
             });
         });

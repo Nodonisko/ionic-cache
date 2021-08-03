@@ -44,9 +44,7 @@ export class CacheStorageService {
      * Returns whether or not an object is a cached item.
      */
     private isCachedItem(key: string, item: any): boolean {
-        return (
-            item && item.expires && item.type && key.startsWith(this.keyPrefix)
-        );
+        return item && item.expires && item.type && key.startsWith(this.keyPrefix);
     }
 
     /**
