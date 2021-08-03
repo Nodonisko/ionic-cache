@@ -28,17 +28,16 @@
                     }
                 },
                 "lint": {
-                    "builder": "@angular-devkit/build-angular:tslint",
+                    "builder": "@angular-eslint/builder:lint",
                     "options": {
-                        "tsConfig": [
-                            "projects/ionic-cache/tsconfig.lib.json",
-                            "projects/ionic-cache/tsconfig.spec.json"
-                        ],
-                        "exclude": ["**/node_modules/**"]
+                        "lintFilePatterns": ["projects/ionic-cache/**/*.ts", "projects/ionic-cache/**/*.html"]
                     }
                 }
             }
         }
     },
-    "defaultProject": "ionic-cache"
+    "defaultProject": "ionic-cache",
+    "cli": {
+        "defaultCollection": "@angular-eslint/schematics"
+    }
 }

@@ -1,0 +1,21 @@
+{
+    "root": true,
+    "rules": {
+        "file-progress/activate": 1
+    },
+    "plugins": ["file-progress"],
+    "overrides": [
+        {
+            "files": ["*.ts"],
+            "parserOptions": {
+                "project": ["tsconfig.json"],
+                "createDefaultProgram": true
+            },
+            "extends": ["plugin:@angular-eslint/recommended"]
+        },
+        {
+            "files": ["*.html"],
+            "extends": ["plugin:@angular-eslint/template/recommended"]
+        }
+    ]
+}
