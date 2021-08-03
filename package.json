@@ -6,6 +6,7 @@
         "start": "ng serve",
         "build": "ng build",
         "build:prod": "npm run build -- --configuration production",
+        "postbuild": "cp ./README.md ./dist/ionic-cache/README.md && cp ./LICENSE ./dist/ionic-cache/LICENSE",
         "test": "ng test",
         "lint": "ng lint",
         "prettify": "prettier --write ."
