@@ -3,7 +3,7 @@ import { HttpResponse } from '@angular/common/http';
 import { Observable, Subject } from 'rxjs';
 import { defer, from, fromEvent, merge, throwError } from 'rxjs';
 import { share, map, catchError } from 'rxjs/operators';
-import { CacheStorageService, StorageCacheItem } from './cache-storage';
+import { CacheStorageService, StorageCacheItem } from '../../cache-storage';
 import { Storage } from '@ionic/storage-angular';
 
 export interface CacheConfig {

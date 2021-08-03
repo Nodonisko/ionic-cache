@@ -1,5 +1,5 @@
 import { NgModule, ModuleWithProviders, InjectionToken } from '@angular/core';
-import { CacheConfig, CacheService } from './cache.service';
+import { CacheConfig, CacheService } from './services/cache/cache.service';
 import { IonicStorageModule, Storage } from '@ionic/storage-angular';
 import { CacheStorageService } from './cache-storage';
 
