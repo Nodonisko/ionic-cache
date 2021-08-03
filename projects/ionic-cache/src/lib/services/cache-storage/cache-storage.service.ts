@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Storage } from '@ionic/storage-angular';
-import { StorageCacheItem } from 'dist/ionic-cache/lib/cache-storage';
+import { StorageCacheItem } from '../../interfaces/cache-storage-item.interface';
 
 @Injectable()
 export class CacheStorageService {
