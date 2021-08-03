@@ -1,6 +1,6 @@
 # Ionic cache service
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-4-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-5-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 Ionic cache service that can cache almost everything. **It caches requests, observables, promises and classic data.** It uses [Ionic Storage](https://ionicframework.com/docs/storage/) so we support IndexedDB, SQLite (Cordova), WebSQL in this order.
@@ -360,6 +360,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://willpoulson.co.uk/"><img src="https://avatars.githubusercontent.com/u/12980659?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Will Poulson</b></sub></a><br /><a href="https://github.com/Nodonisko/ionic-cache/commits?author=WillPoulson" title="Documentation">📖</a> <a href="https://github.com/Nodonisko/ionic-cache/commits?author=WillPoulson" title="Code">💻</a> <a href="https://github.com/Nodonisko/ionic-cache/pulls?q=is%3Apr+reviewed-by%3AWillPoulson" title="Reviewed Pull Requests">👀</a></td>
     <td align="center"><a href="https://zyramedia.com/"><img src="https://avatars.githubusercontent.com/u/13794420?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Ibby Hadeed</b></sub></a><br /><a href="https://github.com/Nodonisko/ionic-cache/commits?author=ihadeed" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/darthdie"><img src="https://avatars.githubusercontent.com/u/4060546?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Bowser</b></sub></a><br /><a href="https://github.com/Nodonisko/ionic-cache/commits?author=darthdie" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/vojtatranta"><img src="https://avatars.githubusercontent.com/u/4154045?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Vojtěch Tranta</b></sub></a><br /><a href="https://github.com/Nodonisko/ionic-cache/commits?author=vojtatranta" title="Code">💻</a></td>
   </tr>
 </table>
 

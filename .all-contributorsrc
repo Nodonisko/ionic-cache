@@ -50,6 +50,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "vojtatranta",
+      "name": "Vojtěch Tranta",
+      "avatar_url": "https://avatars.githubusercontent.com/u/4154045?v=4",
+      "profile": "https://github.com/vojtatranta",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7
