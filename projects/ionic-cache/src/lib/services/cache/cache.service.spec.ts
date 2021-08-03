@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
+import { errorMessages } from '../../constants/error-messages.constant';
 import { CacheStorageService } from '../cache-storage/cache-storage.service';
-import { CacheService, MESSAGES } from './cache.service';
+import { CacheService } from './cache.service';
 
 describe('CacheService', () => {
     let service: CacheService;
@@ -221,7 +222,7 @@ describe('CacheService', () => {
                 try {
                     service.saveItem(mockKey, mockData);
                 } catch (error) {
-                    expect(error.message).toBe(MESSAGES[1]);
+                    expect(error.message).toBe(errorMessages.notEnabled);
                 }
             });
         });
@@ -251,7 +252,7 @@ describe('CacheService', () => {
                 try {
                     service.removeItem(mockKey);
                 } catch (error) {
-                    expect(error.message).toBe(MESSAGES[1]);
+                    expect(error.message).toBe(errorMessages.notEnabled);
                 }
             });
         });
@@ -296,7 +297,7 @@ describe('CacheService', () => {
                 try {
                     await service.removeItems('');
                 } catch (error) {
-                    expect(error.message).toBe(MESSAGES[1]);
+                    expect(error.message).toBe(errorMessages.notEnabled);
                 }
             });
         });
@@ -326,7 +327,7 @@ describe('CacheService', () => {
                     try {
                         await service.getRawItem('');
                     } catch (error) {
-                        expect(error.message).toBe(MESSAGES[3]);
+                        expect(error.message).toBe(errorMessages.notFound);
                     }
                 });
             });
@@ -341,7 +342,7 @@ describe('CacheService', () => {
                 try {
                     await service.getRawItem('');
                 } catch (error) {
-                    expect(error.message).toBe(MESSAGES[1]);
+                    expect(error.message).toBe(errorMessages.notEnabled);
                 }
             });
         });
@@ -381,7 +382,7 @@ describe('CacheService', () => {
                 try {
                     await service.itemExists('');
                 } catch (error) {
-                    expect(error.message).toBe(MESSAGES[1]);
+                    expect(error.message).toBe(errorMessages.notEnabled);
                 }
             });
         });
@@ -427,7 +428,7 @@ describe('CacheService', () => {
                         try {
                             await service.getItem(mockKey);
                         } catch (error) {
-                            expect(error.message).toBe(MESSAGES[2] + mockKey);
+                            expect(error.message).toBe(errorMessages.expired + mockKey);
                         }
                     });
                 });
@@ -457,7 +458,7 @@ describe('CacheService', () => {
                 try {
                     await service.getItem('');
                 } catch (error) {
-                    expect(error.message).toBe(MESSAGES[1]);
+                    expect(error.message).toBe(errorMessages.notEnabled);
                 }
             });
         });

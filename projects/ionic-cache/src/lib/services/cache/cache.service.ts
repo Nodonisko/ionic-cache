@@ -6,16 +6,7 @@ import { share, map, catchError } from 'rxjs/operators';
 import { Storage } from '@ionic/storage-angular';
 import { CacheStorageService } from '../cache-storage/cache-storage.service';
 import { StorageCacheItem } from '../../interfaces/cache-storage-item.interface';
-
-export const MESSAGES = {
-    0: 'Cache initialization error: ',
-    1: 'Cache is not enabled.',
-    2: 'Cache entry already expired: ',
-    3: 'No such key: ',
-    4: 'No entries were deleted, because browser is offline.',
-};
-
-export type CacheValueFactory<T> = () => Promise<T>;
+import { errorMessages } from '../../constants/error-messages.constant';
 
 /**
  * @description Check if it's an HttpResponse
@@ -70,7 +61,7 @@ export class CacheService {
             this.cacheEnabled = true;
         } catch (e) {
             this.cacheEnabled = false;
-            console.error(MESSAGES[0], e);
+            console.error(errorMessages.initialization, e);
         }
     }
 
@@ -157,7 +148,7 @@ export class CacheService {
         ttl: number = this.ttl
     ): Promise<any> {
         if (!this.cacheEnabled) {
-            throw new Error(MESSAGES[1]);
+            throw new Error(errorMessages.notEnabled);
         }
 
         if (Blob.name === data.constructor.name) {
@@ -191,7 +182,7 @@ export class CacheService {
         ttl: number = this.ttl
     ): Promise<any> {
         if (!this.cacheEnabled) {
-            throw new Error(MESSAGES[1]);
+            throw new Error(errorMessages.notEnabled);
         }
 
         const expires = new Date().getTime() + ttl * 1000,
@@ -235,7 +226,7 @@ export class CacheService {
      */
     removeItem(key: string): Promise<any> {
         if (!this.cacheEnabled) {
-            throw new Error(MESSAGES[1]);
+            throw new Error(errorMessages.notEnabled);
         }
 
         return this._storage.remove(key);
@@ -247,7 +238,7 @@ export class CacheService {
      */
     async removeItems(pattern: string): Promise<any> {
         if (!this.cacheEnabled) {
-            throw new Error(MESSAGES[1]);
+            throw new Error(errorMessages.notEnabled);
         }
 
         let regex = new RegExp(`^${pattern.split('*').join('.*')}$`);
@@ -268,7 +259,7 @@ export class CacheService {
      */
     async getRawItem<T = any>(key: string): Promise<StorageCacheItem> {
         if (!this.cacheEnabled) {
-            throw new Error(MESSAGES[1]);
+            throw new Error(errorMessages.notEnabled);
         }
 
         try {
@@ -279,7 +270,7 @@ export class CacheService {
 
             throw new Error('');
         } catch (err) {
-            throw new Error(MESSAGES[3] + key);
+            throw new Error(errorMessages.notFound + key);
         }
     }
 
@@ -294,7 +285,7 @@ export class CacheService {
      */
     async itemExists(key: string): Promise<boolean | string> {
         if (!this.cacheEnabled) {
-            throw new Error(MESSAGES[1]);
+            throw new Error(errorMessages.notEnabled);
         }
 
         return this._storage.exists(key);
@@ -307,7 +298,7 @@ export class CacheService {
      */
     async getItem<T = any>(key: string): Promise<T> {
         if (!this.cacheEnabled) {
-            throw new Error(MESSAGES[1]);
+            throw new Error(errorMessages.notEnabled);
         }
 
         let data = await this.getRawItem(key);
@@ -316,7 +307,7 @@ export class CacheService {
             data.expires < new Date().getTime() &&
             (this.invalidateOffline || this.isOnline())
         ) {
-            throw new Error(MESSAGES[2] + key);
+            throw new Error(errorMessages.expired + key);
         }
 
         return CacheService.decodeRawData(data);
@@ -324,7 +315,7 @@ export class CacheService {
 
     async getOrSetItem<T>(
         key: string,
-        factory: CacheValueFactory<T>,
+        factory: () => Promise<T>,
         groupKey?: string,
         ttl?: number
     ): Promise<T> {
@@ -481,7 +472,7 @@ export class CacheService {
      */
     clearAll(): Promise<any> {
         if (!this.cacheEnabled) {
-            throw new Error(MESSAGES[2]);
+            throw new Error(errorMessages.notEnabled);
         }
 
         return this.resetDatabase();
@@ -494,11 +485,11 @@ export class CacheService {
      */
     async clearExpired(ignoreOnlineStatus = false): Promise<any> {
         if (!this.cacheEnabled) {
-            throw new Error(MESSAGES[2]);
+            throw new Error(errorMessages.notEnabled);
         }
 
         if (!this.isOnline() && !ignoreOnlineStatus) {
-            throw new Error(MESSAGES[4]);
+            throw new Error(errorMessages.browserOffline);
         }
 
         let items = await this._storage.all();
@@ -518,7 +509,7 @@ export class CacheService {
      */
     async clearGroup(groupKey: string): Promise<any> {
         if (!this.cacheEnabled) {
-            throw new Error(MESSAGES[2]);
+            throw new Error(errorMessages.notEnabled);
         }
 
         let items = await this._storage.all();
