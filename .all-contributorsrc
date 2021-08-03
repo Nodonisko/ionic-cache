@@ -21,6 +21,17 @@
         "code",
         "review"
       ]
+    },
+    {
+      "login": "WillPoulson",
+      "name": "Will Poulson",
+      "avatar_url": "https://avatars.githubusercontent.com/u/12980659?v=4",
+      "profile": "https://willpoulson.co.uk/",
+      "contributions": [
+        "doc",
+        "code",
+        "review"
+      ]
     }
   ],
   "contributorsPerLine": 7
