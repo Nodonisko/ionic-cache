@@ -355,6 +355,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://zyramedia.com/"><img src="https://avatars.githubusercontent.com/u/13794420?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Ibby Hadeed</b></sub></a><br /><a href="https://github.com/Nodonisko/ionic-cache/commits?author=ihadeed" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/darthdie"><img src="https://avatars.githubusercontent.com/u/4060546?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Bowser</b></sub></a><br /><a href="https://github.com/Nodonisko/ionic-cache/commits?author=darthdie" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/vojtatranta"><img src="https://avatars.githubusercontent.com/u/4154045?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Vojtěch Tranta</b></sub></a><br /><a href="https://github.com/Nodonisko/ionic-cache/commits?author=vojtatranta" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/bpfrare"><img src="https://avatars.githubusercontent.com/u/1761802?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Bruno Frare</b></sub></a><br /><a href="https://github.com/Nodonisko/ionic-cache/commits?author=bpfrare" title="Code">💻</a></td>
   </tr>
 </table>
 
