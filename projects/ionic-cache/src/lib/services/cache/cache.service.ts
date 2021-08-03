@@ -22,14 +22,14 @@ export class CacheService {
     /**
      * Disable or enable cache.
      */
-    public enableCache(enable: boolean = true) {
+    public enableCache(enable: boolean = true): void {
         this.cacheEnabled = enable;
     }
 
     /**
      * Set if expired cache should be invalidated if device is offline.
      */
-    public setOfflineInvalidate(offlineInvalidate: boolean) {
+    public setOfflineInvalidate(offlineInvalidate: boolean): void {
         this.invalidateOffline = !offlineInvalidate;
     }
 
@@ -44,7 +44,7 @@ export class CacheService {
     /**
      * Checks if the device is online.
      */
-    public isOnline() {
+    public isOnline(): boolean {
         return navigator.onLine;
     }
 
@@ -70,9 +70,9 @@ export class CacheService {
             return this.saveBlobItem(key, data, groupKey, ttl);
         }
 
-        const expires = new Date().getTime() + ttl * 1000,
-            type = isHttpResponse(data) ? 'response' : typeof data,
-            value = JSON.stringify(data);
+        const expires = new Date().getTime() + ttl * 1000;
+        const type = isHttpResponse(data) ? 'response' : typeof data;
+        const value = JSON.stringify(data);
 
         return this.cacheStorage.set(key, {
             value,
@@ -104,8 +104,8 @@ export class CacheService {
             throw new Error(errorMessages.notEnabled);
         }
 
-        let regex = new RegExp(`^${pattern.split('*').join('.*')}$`);
-        let items = await this.cacheStorage.all();
+        const regex = new RegExp(`^${pattern.split('*').join('.*')}$`);
+        const items = await this.cacheStorage.all();
 
         return Promise.all(
             items
@@ -126,7 +126,7 @@ export class CacheService {
         }
 
         try {
-            let data = await this.cacheStorage.get(key);
+            const data = await this.cacheStorage.get(key);
             if (!!data) {
                 return data;
             }
@@ -168,7 +168,7 @@ export class CacheService {
             throw new Error(errorMessages.notEnabled);
         }
 
-        let data = await this.getRawItem(key);
+        const data = await this.getRawItem(key);
 
         if (
             data.expires < new Date().getTime() &&
@@ -220,7 +220,9 @@ export class CacheService {
         groupKey?: string,
         ttl?: number
     ): Observable<T> {
-        if (!this.cacheEnabled) return observable;
+        if (!this.cacheEnabled) {
+            return observable;
+        }
 
         observable = observable.pipe(share());
 
@@ -243,16 +245,18 @@ export class CacheService {
     }
 
     /**
-     * Load item from cache if it's in cache or load from origin observable
-     * @param {string} key - Unique key
-     * @param {any} observable - Observable with data
-     * @param {string} [groupKey] - group key
-     * @param {number} [ttl] - TTL in seconds
-     * @param {string} [delayType='expired']
-     * @param {string} [metaKey] - property on T to which to assign meta data
-     * @return {Observable<any>} - data from cache or origin observable
+     * Loads an item from cache regardless of expiry.
+     * If the delay type is set to expired it will only get data from the observable when the item is expired.
+     * If the delay type is set to all it will always get data from the observable.
+     * @param key The unique key
+     * @param observable The observable with data.
+     * @param groupKey The group key
+     * @param ttl The TTL in seconds
+     * @param delayType The delay type, defaults to expired.
+     * @param metaKey The property on T to which to assign meta data.
+     * @returns An observable which will emit the data.
      */
-    loadFromDelayedObservable<T = any>(
+    public loadFromDelayedObservable<T = any>(
         key: string,
         observable: Observable<T>,
         groupKey?: string,
@@ -260,7 +264,9 @@ export class CacheService {
         delayType: string = 'expired',
         metaKey?: string
     ): Observable<T> {
-        if (!this.cacheEnabled) return observable;
+        if (!this.cacheEnabled){
+            return observable;
+        }
 
         const observableSubject = new Subject<T>();
         observable = observable.pipe(share());
@@ -298,7 +304,7 @@ export class CacheService {
             .catch((e) => {
                 this.getRawItem(key)
                     .then(async (res) => {
-                        let result = await decodeRawData(res);
+                        const result = await decodeRawData(res);
                         if (metaKey) {
                             result[metaKey] = result[metaKey] || {};
                             result[metaKey].fromCache = true;
@@ -314,9 +320,9 @@ export class CacheService {
 
     /**
      * Perform complete cache clear
-     * @return {Promise<any>}
+     * @returns A promise which resolves when the cache storage is cleared.
      */
-    clearAll(): Promise<any> {
+    public clearAll(): Promise<any> {
         if (!this.cacheEnabled) {
             throw new Error(errorMessages.notEnabled);
         }
@@ -325,11 +331,11 @@ export class CacheService {
     }
 
     /**
-     * Remove all expired items from cache
-     * @param {boolean} ignoreOnlineStatus -
-     * @return {Promise<any>} - query promise
+     * Removes all expired items from the cache.
+     * @param ignoreOnlineStatus Ignores the online status, defaults to false.
+     * @returns A promise which resolves when all expired items are cleared from cache storage.
      */
-    async clearExpired(ignoreOnlineStatus = false): Promise<any> {
+    public async clearExpired(ignoreOnlineStatus = false): Promise<any> {
         if (!this.cacheEnabled) {
             throw new Error(errorMessages.notEnabled);
         }
@@ -338,8 +344,8 @@ export class CacheService {
             throw new Error(errorMessages.browserOffline);
         }
 
-        let items = await this.cacheStorage.all();
-        let datetime = new Date().getTime();
+        const items = await this.cacheStorage.all();
+        const datetime = new Date().getTime();
 
         return Promise.all(
             items
@@ -349,16 +355,16 @@ export class CacheService {
     }
 
     /**
-     * Remove all item with specified group
-     * @param {string} groupKey - group key
-     * @return {Promise<any>} - query promise
+     * Removes all item with specified group
+     * @param groupKey The group key
+     * @returns A promise which resolves when all the items in the group have been cleared.
      */
     async clearGroup(groupKey: string): Promise<any> {
         if (!this.cacheEnabled) {
             throw new Error(errorMessages.notEnabled);
         }
 
-        let items = await this.cacheStorage.all();
+        const items = await this.cacheStorage.all();
 
         return Promise.all(
             items
@@ -388,7 +394,7 @@ export class CacheService {
      * Resets the storage back to being empty.
      */
     private async resetDatabase(): Promise<any> {
-        let items = await this.cacheStorage.all();
+        const items = await this.cacheStorage.all();
         return Promise.all(items.map((item) => this.removeItem(item.key)));
     }
 
@@ -411,8 +417,8 @@ export class CacheService {
             throw new Error(errorMessages.notEnabled);
         }
 
-        const expires = new Date().getTime() + ttl * 1000,
-            type = blob.type;
+        const expires = new Date().getTime() + ttl * 1000;
+        const type = blob.type;
 
         try {
             const base64data = await convertBlobToBase64(blob);

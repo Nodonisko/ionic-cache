@@ -22,7 +22,7 @@ export class CacheStorageService {
 
     public async get(key: string): Promise<any> {
         const value = await this.storage.get(this.buildKey(key));
-        return !!value ? Object.assign({ key: key }, value) : null;
+        return !!value ? Object.assign({ key }, value) : null;
     }
 
     public async exists(key: string): Promise<boolean> {
@@ -42,7 +42,6 @@ export class CacheStorageService {
 
     /**
      * Returns whether or not an object is a cached item.
-     * @return {boolean}
      */
     private isCachedItem(key: string, item: any): boolean {
         return (
@@ -52,7 +51,6 @@ export class CacheStorageService {
 
     /**
      * Makes sure that the key is prefixed properly
-     * @return {string}
      */
     private buildKey(key: string): string {
         if (key.startsWith(this.keyPrefix)) {
@@ -64,7 +62,6 @@ export class CacheStorageService {
 
     /**
      * Makes sure that the key isn't prefixed
-     * @return {string}
      */
     private debuildKey(key: string): string {
         if (key.startsWith(this.keyPrefix)) {

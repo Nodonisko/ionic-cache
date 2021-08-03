@@ -6,7 +6,7 @@ import { HttpResponse } from '@angular/common/http';
  * @return The data from cache
  */
 export function isHttpResponse(data: any): boolean {
-    let orCondition =
+    const orCondition =
         data &&
         typeof data === 'object' &&
         data.hasOwnProperty('status') &&

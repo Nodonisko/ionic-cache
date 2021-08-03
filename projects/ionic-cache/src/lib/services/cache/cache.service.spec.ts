@@ -230,7 +230,7 @@ describe('CacheService', () => {
 
     describe('removeItems', () => {
         describe('when cache is enabled', () => {
-            let mockStorageItems = [
+            const mockStorageItems = [
                 { key: 'movies/comedy/1', data: 'Scott Pilgrim vs. The World' },
                 { key: 'movies/comedy/2', data: 'The Princess Bride' },
                 { key: 'songs/metal/1', data: 'Who Bit the Moon' },

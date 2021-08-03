@@ -28,6 +28,8 @@ jobs:
                       - v1-dependencies-{{ checksum "package-lock.json" }}
                       - v1-dependencies-
             - run:
+                  command: npm run lint
+            - run:
                   command: npm run test -- --no-watch --no-progress
 
     build:
