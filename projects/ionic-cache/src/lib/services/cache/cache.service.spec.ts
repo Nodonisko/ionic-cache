@@ -41,26 +41,6 @@ describe('CacheService', () => {
         expect(service.isOnline()).toBe(true);
     });
 
-    describe('when a connect event is dispatched', () => {
-        beforeEach(() => {
-            window.dispatchEvent(new Event('online'));
-        });
-
-        it('should set the network status to online', () => {
-            expect(service.isOnline()).toBe(true);
-        });
-    });
-
-    describe('when a disconnect event is dispatched', () => {
-        beforeEach(() => {
-            window.dispatchEvent(new Event('offline'));
-        });
-
-        it('should set the network status to online', () => {
-            expect(service.isOnline()).toBe(false);
-        });
-    });
-
     it('should create the cache', () => {
         expect(dependencies.cacheStorageService.create).toHaveBeenCalled();
     });
@@ -427,7 +407,7 @@ describe('CacheService', () => {
                 describe('when invalidateOffline is false and offline', () => {
                     beforeEach(() => {
                         service.setOfflineInvalidate(true);
-                        service['networkStatus'] = false;
+                        spyOn(service, 'isOnline').and.returnValue(false);
                         return service.getItem(mockKey);
                     });
 

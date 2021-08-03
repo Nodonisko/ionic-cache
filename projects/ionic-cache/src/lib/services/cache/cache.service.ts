@@ -1,9 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpResponse } from '@angular/common/http';
 import { Observable, Subject } from 'rxjs';
-import { defer, from, fromEvent, merge, throwError } from 'rxjs';
-import { share, map, catchError } from 'rxjs/operators';
-import { Storage } from '@ionic/storage-angular';
+import { defer, from, throwError } from 'rxjs';
+import { share, catchError } from 'rxjs/operators';
 import { CacheStorageService } from '../cache-storage/cache-storage.service';
 import { StorageCacheItem } from '../../interfaces/cache-storage-item.interface';
 import { errorMessages } from '../../constants/error-messages.constant';
@@ -15,45 +14,41 @@ export class CacheService {
     private ttl: number = 60 * 60; // one hour
     private cacheEnabled: boolean = true;
     private invalidateOffline: boolean = false;
-    private networkStatusChanges: Observable<boolean>;
-    private networkStatus: boolean = true;
 
     constructor(private cacheStorage: CacheStorageService) {
-        this.watchNetworkInit();
         this.loadCache();
     }
 
-    private async loadCache() {
+    private async loadCache(): Promise<void> {
+        if (!this.cacheEnabled) {
+            return;
+        }
+
         try {
             await this.cacheStorage.create();
-            this.cacheEnabled = true;
-        } catch (e) {
+        } catch (error) {
             this.cacheEnabled = false;
-            console.error(errorMessages.initialization, e);
+            console.error(errorMessages.initialization, error);
         }
     }
 
-
     /**
-     * @description Disable or enable cache
+     * Disable or enable cache
      */
     enableCache(enable: boolean = true) {
         this.cacheEnabled = enable;
     }
 
     /**
-     * @description Delete DB table and create new one
-     * @return {Promise<any>}
+     * Resets the storage back to being empty.
      */
     private async resetDatabase(): Promise<any> {
-        await this.cacheStorage.create();
-
         let items = await this.cacheStorage.all();
         return Promise.all(items.map((item) => this.removeItem(item.key)));
     }
 
     /**
-     * @description Set default TTL
+     * Set default TTL
      * @param {number} ttl - TTL in seconds
      */
     setDefaultTTL(ttl: number): number {
@@ -61,7 +56,7 @@ export class CacheService {
     }
 
     /**
-     * @description Set if expired cache should be invalidated if device is offline
+     * Set if expired cache should be invalidated if device is offline
      * @param {boolean} offlineInvalidate
      */
     setOfflineInvalidate(offlineInvalidate: boolean) {
@@ -69,37 +64,14 @@ export class CacheService {
     }
 
     /**
-     * @description Start watching if devices is online or offline
+     * Check if devices is online
      */
-    private watchNetworkInit() {
-        this.networkStatus = navigator.onLine;
-        const connect = fromEvent(window, 'online').pipe(map(() => true)),
-            disconnect = fromEvent(window, 'offline').pipe(map(() => false));
-
-        this.networkStatusChanges = merge(connect, disconnect).pipe(share());
-        this.networkStatusChanges.subscribe((status) => {
-            this.networkStatus = status;
-        });
+    public isOnline() {
+        return navigator.onLine;
     }
 
     /**
-     * @description Stream of network status changes
-     * * @return {Observable<boolean>} network status stream
-     */
-    getNetworkStatusChanges() {
-        return this.networkStatusChanges;
-    }
-
-    /**
-     * @description Check if devices is online
-     * @return {boolean} network status
-     */
-    isOnline() {
-        return this.networkStatus;
-    }
-
-    /**
-     * @description Save item to cache
+     * Save item to cache
      * @param {string} key - Unique key
      * @param {any} data - Data to store
      * @param {string} [groupKey] - group key
@@ -133,7 +105,7 @@ export class CacheService {
     }
 
     /**
-     * @description Save blob item to cache
+     * Save blob item to cache
      * @param {string} key - Unique key
      * @param {any} blob - Blob to store
      * @param {string} [groupKey] - group key
@@ -185,7 +157,7 @@ export class CacheService {
     }
 
     /**
-     * @description Delete item from cache
+     * Delete item from cache
      * @param {string} key - Unique key
      * @return {Promise<any>} - query execution promise
      */
@@ -198,7 +170,7 @@ export class CacheService {
     }
 
     /**
-     * @description Removes all items with a key that matches pattern
+     * Removes all items with a key that matches pattern
      * @return {Promise<any>}
      */
     async removeItems(pattern: string): Promise<any> {
@@ -218,7 +190,7 @@ export class CacheService {
     }
 
     /**
-     * @description Get item from cache without expire check etc.
+     * Get item from cache without expire check etc.
      * @param {string} key - Unique key
      * @return {Promise<any>} - data from cache
      */
@@ -244,7 +216,7 @@ export class CacheService {
     }
 
     /**
-     * @description Check if item exists in cache regardless if expired or not
+     * Check if item exists in cache regardless if expired or not
      * @param {string} key - Unique key
      * @return {Promise<boolean | string>} - boolean - true if exists
      */
@@ -257,7 +229,7 @@ export class CacheService {
     }
 
     /**
-     * @description Get item from cache with expire check and correct type assign
+     * Get item from cache with expire check and correct type assign
      * @param {string} key - Unique key
      * @return {Promise<any>} - data from cache
      */
@@ -297,7 +269,7 @@ export class CacheService {
     }
 
     /**
-     * @description Decode raw data from DB
+     * Decode raw data from DB
      * @param {any} data - Data
      * @return {any} - decoded data
      */
@@ -326,7 +298,7 @@ export class CacheService {
     }
 
     /**
-     * @description Load item from cache if it's in cache or load from origin observable
+     * Load item from cache if it's in cache or load from origin observable
      * @param {string} key - Unique key
      * @param {any} observable - Observable with data
      * @param {string} [groupKey] - group key
@@ -362,7 +334,7 @@ export class CacheService {
     }
 
     /**
-     * @description Load item from cache if it's in cache or load from origin observable
+     * Load item from cache if it's in cache or load from origin observable
      * @param {string} key - Unique key
      * @param {any} observable - Observable with data
      * @param {string} [groupKey] - group key
@@ -444,7 +416,7 @@ export class CacheService {
     }
 
     /**
-     * @description Remove all expired items from cache
+     * Remove all expired items from cache
      * @param {boolean} ignoreOnlineStatus -
      * @return {Promise<any>} - query promise
      */
@@ -468,7 +440,7 @@ export class CacheService {
     }
 
     /**
-     * @description Remove all item with specified group
+     * Remove all item with specified group
      * @param {string} groupKey - group key
      * @return {Promise<any>} - query promise
      */
