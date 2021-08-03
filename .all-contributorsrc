@@ -32,6 +32,15 @@
         "code",
         "review"
       ]
+    },
+    {
+      "login": "ihadeed",
+      "name": "Ibby Hadeed",
+      "avatar_url": "https://avatars.githubusercontent.com/u/13794420?v=4",
+      "profile": "https://zyramedia.com/",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7

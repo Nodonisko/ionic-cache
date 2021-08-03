@@ -1,6 +1,6 @@
 # Ionic cache service
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-2-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-3-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 Ionic cache service that can cache almost everything. **It caches requests, observables, promises and classic data.** It uses [Ionic Storage](https://ionicframework.com/docs/storage/) so we support IndexedDB, SQLite (Cordova), WebSQL in this order.
@@ -358,6 +358,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
   <tr>
     <td align="center"><a href="https://danielsuchy.cz/"><img src="https://avatars.githubusercontent.com/u/5837757?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Daniel Suchý</b></sub></a><br /><a href="#ideas-Nodonisko" title="Ideas, Planning, & Feedback">🤔</a> <a href="https://github.com/Nodonisko/ionic-cache/commits?author=Nodonisko" title="Documentation">📖</a> <a href="https://github.com/Nodonisko/ionic-cache/commits?author=Nodonisko" title="Code">💻</a> <a href="https://github.com/Nodonisko/ionic-cache/pulls?q=is%3Apr+reviewed-by%3ANodonisko" title="Reviewed Pull Requests">👀</a></td>
     <td align="center"><a href="https://willpoulson.co.uk/"><img src="https://avatars.githubusercontent.com/u/12980659?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Will Poulson</b></sub></a><br /><a href="https://github.com/Nodonisko/ionic-cache/commits?author=WillPoulson" title="Documentation">📖</a> <a href="https://github.com/Nodonisko/ionic-cache/commits?author=WillPoulson" title="Code">💻</a> <a href="https://github.com/Nodonisko/ionic-cache/pulls?q=is%3Apr+reviewed-by%3AWillPoulson" title="Reviewed Pull Requests">👀</a></td>
+    <td align="center"><a href="https://zyramedia.com/"><img src="https://avatars.githubusercontent.com/u/13794420?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Ibby Hadeed</b></sub></a><br /><a href="https://github.com/Nodonisko/ionic-cache/commits?author=ihadeed" title="Code">💻</a></td>
   </tr>
 </table>
 
