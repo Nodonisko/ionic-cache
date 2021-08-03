@@ -9,7 +9,8 @@
         "postbuild": "cp ./README.md ./dist/ionic-cache/README.md && cp ./LICENSE ./dist/ionic-cache/LICENSE",
         "test": "jest",
         "lint": "ng lint",
-        "prettify": "prettier --write ."
+        "prettify": "prettier --write .",
+        "prepare": "husky install"
     },
     "dependencies": {
         "@angular/animations": "~12.1.4",
@@ -43,11 +44,17 @@
         "codelyzer": "^6.0.0",
         "eslint": "^7.26.0",
         "eslint-plugin-file-progress": "^1.1.1",
+        "husky": "^7.0.1",
         "jest": "^27.0.6",
         "jest-preset-angular": "^9.0.5",
+        "lint-staged": "^11.1.1",
         "ng-packagr": "^12.1.2",
         "prettier": "^2.3.2",
         "ts-node": "~8.3.0",
         "typescript": "~4.3.5"
+    },
+    "lint-staged": {
+        "*.ts": "eslint --cache --fix",
+        "*.{js,ts,json,scss,md}": "prettier --write"
     }
 }
