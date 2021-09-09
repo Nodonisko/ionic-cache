@@ -3,6 +3,7 @@ import { CacheService } from './services/cache/cache.service';
 import { IonicStorageModule } from '@ionic/storage-angular';
 import { defaultConfig } from './constants/default-config.contant';
 import { CacheConfig } from './interfaces/cache-config.interface';
+import { CacheStorageService } from './services/cache-storage/cache-storage.service';
 
 export const CONFIG = new InjectionToken<CacheConfig>('CONFIG');
 
@@ -12,7 +13,8 @@ export const CONFIG = new InjectionToken<CacheConfig>('CONFIG');
             name: '__ionicCache',
             driverOrder: ['indexeddb', 'sqlite', 'websql']
         })
-    ]
+    ],
+    providers: [CacheStorageService]
 })
 export class CacheModule {
     static forRoot(cacheConfig?: CacheConfig): ModuleWithProviders<CacheModule> {
