@@ -13,8 +13,7 @@ export const CONFIG = new InjectionToken<CacheConfig>('CONFIG');
             name: '__ionicCache',
             driverOrder: ['indexeddb', 'sqlite', 'websql']
         })
-    ],
-    providers: [CacheStorageService]
+    ]
 })
 export class CacheModule {
     static forRoot(cacheConfig?: CacheConfig): ModuleWithProviders<CacheModule> {
@@ -25,6 +24,7 @@ export class CacheModule {
                     provide: CONFIG,
                     useValue: { ...defaultConfig, ...cacheConfig }
                 },
+                CacheStorageService,
                 CacheService
             ]
         };
