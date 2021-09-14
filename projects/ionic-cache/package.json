@@ -1,6 +1,6 @@
 {
     "name": "ionic-cache",
-    "version": "6.0.2",
+    "version": "6.0.3",
     "description": "Ionic cache service - cache request, data, promises etc.",
     "peerDependencies": {
         "@angular/common": ">=9.0.0",
