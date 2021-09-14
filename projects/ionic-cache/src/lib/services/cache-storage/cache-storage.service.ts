@@ -1,12 +1,12 @@
-import { Injectable } from '@angular/core';
+import { Inject, Injectable } from '@angular/core';
 import { Storage } from '@ionic/storage-angular';
+import { CONFIG } from '../../cache.module';
+import { CacheConfig } from '../../interfaces/cache-config.interface';
 import { StorageCacheItem } from '../../interfaces/cache-storage-item.interface';
 
 @Injectable()
 export class CacheStorageService {
-    public keyPrefix: string;
-
-    constructor(private storage: Storage) {}
+    constructor(private storage: Storage, @Inject(CONFIG) private config: CacheConfig) {}
 
     public create(): Promise<Storage> {
         return this.storage.create();
@@ -44,26 +44,26 @@ export class CacheStorageService {
      * Returns whether or not an object is a cached item.
      */
     private isCachedItem(key: string, item: any): boolean {
-        return item && item.expires && item.type && key.startsWith(this.keyPrefix);
+        return item && item.expires && item.type && key.startsWith(this.config.keyPrefix);
     }
 
     /**
      * Makes sure that the key is prefixed properly
      */
     private buildKey(key: string): string {
-        if (key.startsWith(this.keyPrefix)) {
+        if (key.startsWith(this.config.keyPrefix)) {
             return key;
         }
 
-        return this.keyPrefix + key;
+        return this.config.keyPrefix + key;
     }
 
     /**
      * Makes sure that the key isn't prefixed
      */
     private debuildKey(key: string): string {
-        if (key.startsWith(this.keyPrefix)) {
-            return key.substr(this.keyPrefix.length);
+        if (key.startsWith(this.config.keyPrefix)) {
+            return key.substr(this.config.keyPrefix.length);
         }
 
         return key;
